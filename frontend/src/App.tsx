@@ -7,7 +7,10 @@ import { RequireRole } from "./auth/RequireRole";
 import Login from "./pages/Login";
 import AdminHome from "./pages/admin/AdminHome";
 import Funcionarios from "./pages/admin/Funcionarios";
+import Cardapio from "./pages/admin/Cardapio";
+import MesasAdmin from "./pages/admin/Mesas";
 import SalaoHome from "./pages/salao/SalaoHome";
+import MesasSalao from "./pages/salao/Mesas";
 import CozinhaHome from "./pages/cozinha/CozinhaHome";
 
 function ApiStatus() {
@@ -55,10 +58,34 @@ export default function App() {
             }
           />
           <Route
+            path="/admin/cardapio"
+            element={
+              <RequireRole roles={["admin"]}>
+                <Cardapio />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/mesas"
+            element={
+              <RequireRole roles={["admin"]}>
+                <MesasAdmin />
+              </RequireRole>
+            }
+          />
+          <Route
             path="/salao"
             element={
               <RequireRole roles={["salao"]}>
                 <SalaoHome />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/salao/mesas"
+            element={
+              <RequireRole roles={["salao"]}>
+                <MesasSalao />
               </RequireRole>
             }
           />

@@ -12,6 +12,12 @@ export default function AdminHome() {
       <p>
         <Link to="/admin/funcionarios">Funcionários</Link>
       </p>
+      <p>
+        <Link to="/admin/cardapio">Cardápio</Link>
+      </p>
+      <p>
+        <Link to="/admin/mesas">Mesas</Link>
+      </p>
       <button onClick={logout}>Sair</button>
     </main>
   );

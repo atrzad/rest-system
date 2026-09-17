@@ -1,5 +1,6 @@
 import { apiFetch } from "./client";
 import type { Funcionario, Role } from "../types/auth";
+import type { Comanda, Mesa, OrigemAbertura, Produto } from "../types/domain";
 
 export interface HealthResponse {
   status: string;
@@ -49,4 +50,40 @@ export function atualizarFuncionario(
     method: "PATCH",
     body: JSON.stringify(dados),
   });
+}
+
+export function listProdutos(): Promise<Produto[]> {
+  return apiFetch<Produto[]>("/produtos");
+}
+
+export function criarProduto(dados: Omit<Produto, "id">): Promise<Produto> {
+  return apiFetch<Produto>("/produtos", { method: "POST", body: JSON.stringify(dados) });
+}
+
+export function atualizarProduto(id: string, dados: Partial<Omit<Produto, "id">>): Promise<Produto> {
+  return apiFetch<Produto>(`/produtos/${id}`, { method: "PATCH", body: JSON.stringify(dados) });
+}
+
+export function listMesas(): Promise<Mesa[]> {
+  return apiFetch<Mesa[]>("/mesas");
+}
+
+export function criarMesa(dados: { numero: number; capacidade?: number | null }): Promise<Mesa> {
+  return apiFetch<Mesa>("/mesas", { method: "POST", body: JSON.stringify(dados) });
+}
+
+export function listComandas(status?: "aberta" | "fechada"): Promise<Comanda[]> {
+  const query = status ? `?status_filtro=${status}` : "";
+  return apiFetch<Comanda[]>(`/comandas${query}`);
+}
+
+export function abrirComandaPorMesa(numero_mesa: number, origem: OrigemAbertura): Promise<Comanda> {
+  return apiFetch<Comanda>("/comandas/abrir-por-mesa", {
+    method: "POST",
+    body: JSON.stringify({ numero_mesa, origem }),
+  });
+}
+
+export function fecharComanda(id: string): Promise<Comanda> {
+  return apiFetch<Comanda>(`/comandas/${id}/fechar`, { method: "POST" });
 }
