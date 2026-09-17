@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -7,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.comanda import Comanda, ComandaStatus, OrigemAbertura
 from app.models.mesa import Mesa
+
+logger = logging.getLogger(__name__)
 
 
 async def abrir_por_mesa(db: AsyncSession, numero_mesa: int, origem: OrigemAbertura) -> Comanda:
@@ -26,6 +29,7 @@ async def abrir_por_mesa(db: AsyncSession, numero_mesa: int, origem: OrigemAbert
     db.add(comanda)
     await db.commit()
     await db.refresh(comanda)
+    logger.info("Comanda aberta: mesa=%s origem=%s comanda_id=%s", numero_mesa, origem.value, comanda.id)
     return comanda
 
 
@@ -40,4 +44,5 @@ async def fechar(db: AsyncSession, comanda_id: uuid.UUID) -> Comanda:
     comanda.fechada_em = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(comanda)
+    logger.info("Comanda fechada: comanda_id=%s", comanda.id)
     return comanda

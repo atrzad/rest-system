@@ -1,5 +1,6 @@
 from app.models.comanda import Comanda, ComandaStatus, OrigemAbertura
 from app.models.funcionario import Funcionario
+from app.models.log_entry import LogEntry
 from app.models.mesa import Mesa
 from app.models.pedido import Pedido, PedidoStatus
 from app.models.pedido_item import PedidoItem
@@ -11,6 +12,7 @@ __all__ = [
     "ComandaStatus",
     "OrigemAbertura",
     "Funcionario",
+    "LogEntry",
     "Mesa",
     "Pedido",
     "PedidoStatus",

@@ -53,3 +53,19 @@ Abre em `http://localhost:5173`.
   fan-out), `services/`.
 - `frontend/src/` — React: `pages/admin`, `pages/salao`, `pages/cozinha`, `pages/cliente`.
 - `docs/eventos.md` — catálogo dos eventos de domínio do sistema.
+
+## Logs internos
+
+Eventos de negócio (login, abertura/fechamento de comanda, pedidos) e exceções não
+tratadas ("bugs") são gravados na tabela `log_entry` do Postgres — mensagens/contextos
+grandes (ex: tracebacks) são comprimidos com gzip antes de salvar. **Não existe nenhum
+endpoint HTTP** para consultar isso; é acesso só de quem tem SSH/root no servidor:
+
+```bash
+cd backend
+.venv/bin/python -m app.scripts.ler_logs                    # últimos 50 logs
+.venv/bin/python -m app.scripts.ler_logs --nivel ERROR --limite 100
+```
+
+Retenção não é automática ainda (sem infra de cron neste momento) — para limpar logs
+antigos manualmente: `DELETE FROM log_entry WHERE criado_em < now() - interval '30 days';`

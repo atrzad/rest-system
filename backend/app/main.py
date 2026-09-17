@@ -1,22 +1,33 @@
 import asyncio
 import contextlib
+import logging
 from collections.abc import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
+from app.logging_db import configurar_logging, escrever_logs
 from app.routers import auth, comandas, funcionarios, mesas, pedidos, produtos, ws
 from app.ws.router_bridge import escutar_eventos
+
+logger = logging.getLogger(__name__)
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    task = asyncio.create_task(escutar_eventos())
+    configurar_logging()
+    tasks = [
+        asyncio.create_task(escutar_eventos()),
+        asyncio.create_task(escrever_logs()),
+    ]
     yield
-    task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await task
+    for task in tasks:
+        task.cancel()
+    for task in tasks:
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
 
 
 app = FastAPI(title="Rest System API", lifespan=lifespan)
@@ -28,6 +39,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def tratar_excecao_nao_prevista(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Erro não tratado em %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Erro interno do servidor"})
+
 
 app.include_router(auth.router)
 app.include_router(funcionarios.router)

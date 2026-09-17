@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import HTTPException, status
@@ -12,6 +13,8 @@ from app.models.pedido import Pedido, PedidoStatus
 from app.models.pedido_item import PedidoItem
 from app.models.produto import Produto
 from app.schemas.pedido import PedidoItemCreate, PedidoItemOut, PedidoOut
+
+logger = logging.getLogger(__name__)
 
 TRANSICOES_VALIDAS: dict[PedidoStatus, set[PedidoStatus]] = {
     PedidoStatus.recebido: {PedidoStatus.em_preparo, PedidoStatus.cancelado},
@@ -110,6 +113,7 @@ async def criar_pedido(db: AsyncSession, comanda_id: uuid.UUID, itens: list[Pedi
             payload=resultado.model_dump(mode="json"),
         )
     )
+    logger.info("Pedido criado: pedido_id=%s comanda_id=%s mesa=%s", pedido.id, comanda_id, mesa.numero)
 
     return resultado
 
@@ -159,4 +163,5 @@ async def atualizar_status(db: AsyncSession, pedido_id: uuid.UUID, novo_status: 
             )
         )
 
+    logger.info("Pedido %s mudou de status para %s", pedido.id, novo_status.value)
     return resultado
