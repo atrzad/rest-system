@@ -6,6 +6,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import { RequireRole } from "./auth/RequireRole";
 import Login from "./pages/Login";
 import AdminHome from "./pages/admin/AdminHome";
+import Funcionarios from "./pages/admin/Funcionarios";
 import SalaoHome from "./pages/salao/SalaoHome";
 import CozinhaHome from "./pages/cozinha/CozinhaHome";
 
@@ -42,6 +43,14 @@ export default function App() {
             element={
               <RequireRole roles={["admin"]}>
                 <AdminHome />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/funcionarios"
+            element={
+              <RequireRole roles={["admin"]}>
+                <Funcionarios />
               </RequireRole>
             }
           />
