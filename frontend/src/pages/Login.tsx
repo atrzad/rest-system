@@ -1,13 +1,39 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Navigate } from "react-router-dom";
+
+import { ApiError } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
+import type { Role } from "../types/auth";
+
+const HOME_POR_ROLE: Record<Role, string> = {
+  admin: "/admin",
+  salao: "/salao",
+  cozinha: "/cozinha",
+};
 
 export default function Login() {
+  const { user, login } = useAuth();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
-  function handleSubmit(event: FormEvent) {
+  if (user) {
+    return <Navigate to={HOME_POR_ROLE[user.role]} replace />;
+  }
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    // Login real (chamada à API + JWT) entra na Etapa 1.
-    console.log("login (placeholder)", { email });
+    setErro(null);
+    setEnviando(true);
+    try {
+      await login(email, senha);
+    } catch (err) {
+      setErro(err instanceof ApiError ? err.message : "Não foi possível entrar. Tente novamente.");
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -34,7 +60,10 @@ export default function Login() {
             style={{ width: "100%" }}
           />
         </label>
-        <button type="submit">Entrar</button>
+        {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+        <button type="submit" disabled={enviando}>
+          {enviando ? "Entrando..." : "Entrar"}
+        </button>
       </form>
     </main>
   );

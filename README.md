@@ -27,6 +27,15 @@ python3 -m venv .venv
 
 Testa em `http://localhost:8000/health`.
 
+Para criar o primeiro admin:
+
+```bash
+.venv/bin/python -m app.seed --nome "Admin" --email admin@seudominio.com --senha "..." --role admin
+```
+
+(Use um domínio de e-mail "real" — `.local`/`.test`/`.example` são rejeitados pelo
+validador de e-mail por serem domínios reservados.)
+
 ### Frontend
 
 ```bash

@@ -26,7 +26,14 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   if (!response.ok) {
     const body = await response.text();
-    throw new ApiError(response.status, body || response.statusText);
+    let message = body || response.statusText;
+    try {
+      const parsed = JSON.parse(body);
+      if (typeof parsed.detail === "string") message = parsed.detail;
+    } catch {
+      // corpo não era JSON, mantém o texto cru
+    }
+    throw new ApiError(response.status, message);
   }
 
   if (response.status === 204) {
