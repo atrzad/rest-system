@@ -1,0 +1,22 @@
+[project]
+name = "rest-system-backend"
+version = "0.1.0"
+description = "Backend do Rest System: comandas + KDS orientado a eventos"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-jose[cryptography]>=3.3",
+    "passlib[bcrypt]>=1.7",
+    "redis>=5.2",
+    "qrcode[pil]>=8.0",
+    "pandas>=2.2",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
