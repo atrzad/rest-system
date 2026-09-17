@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { abrirComandaPorMesa, fecharComanda, listComandas, listMesas } from "../../api/endpoints";
 import type { Comanda, Mesa } from "../../types/domain";
+import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
 
 export default function Mesas() {
   const [mesas, setMesas] = useState<Mesa[]>([]);
@@ -12,7 +13,7 @@ export default function Mesas() {
   const [erro, setErro] = useState<string | null>(null);
   const [acaoEmAndamento, setAcaoEmAndamento] = useState<string | null>(null);
 
-  async function carregar() {
+  const carregar = useCallback(async () => {
     setCarregando(true);
     try {
       const [listaMesas, listaComandas] = await Promise.all([listMesas(), listComandas("aberta")]);
@@ -24,11 +25,17 @@ export default function Mesas() {
     } finally {
       setCarregando(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     carregar();
-  }, []);
+  }, [carregar]);
+
+  useWebSocket(wsUrlParaStaff(), (evento) => {
+    if (evento.tipo.startsWith("pedido_") || evento.tipo.startsWith("comanda_") || evento.tipo === "garcom_chamado") {
+      carregar();
+    }
+  });
 
   function comandaDaMesa(mesa: Mesa): Comanda | undefined {
     return comandasAbertas.find((c) => c.mesa_id === mesa.id);
@@ -87,9 +94,12 @@ export default function Mesas() {
                 <strong>Mesa {mesa.numero}</strong>
                 <p style={{ margin: "4px 0" }}>{comanda ? "Ocupada" : "Livre"}</p>
                 {comanda ? (
-                  <button disabled={emAndamento} onClick={() => handleFechar(comanda)}>
-                    Fechar comanda
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <Link to={`/salao/comandas/${comanda.id}`}>Ver comanda</Link>
+                    <button disabled={emAndamento} onClick={() => handleFechar(comanda)}>
+                      Fechar comanda
+                    </button>
+                  </div>
                 ) : (
                   <button disabled={emAndamento || !mesa.ativa} onClick={() => handleAbrir(mesa)}>
                     Abrir comanda

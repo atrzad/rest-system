@@ -21,6 +21,7 @@ Todo evento publicado no Redis (canal `eventos:all`) segue este envelope:
 | `pedido_em_preparo` | cozinha muda status | role `salao`, cliente | não |
 | `pedido_pronto` | cozinha muda status | role `salao`, cliente | não |
 | `pedido_entregue` | garçom confirma entrega | dashboard, cliente | não |
+| `pedido_cancelado` | cozinha/garçom cancela o pedido | role `cozinha`, role `salao` | não |
 | `comanda_fechada` | garçom/admin fecha a conta | dashboard, role `salao` | sim |
 
 Roteamento no `ws_manager` (fase 1, canal único + filtro na aplicação):

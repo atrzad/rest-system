@@ -11,7 +11,9 @@ import Cardapio from "./pages/admin/Cardapio";
 import MesasAdmin from "./pages/admin/Mesas";
 import SalaoHome from "./pages/salao/SalaoHome";
 import MesasSalao from "./pages/salao/Mesas";
+import ComandaDetalhe from "./pages/salao/ComandaDetalhe";
 import CozinhaHome from "./pages/cozinha/CozinhaHome";
+import KDS from "./pages/cozinha/KDS";
 
 function ApiStatus() {
   const [status, setStatus] = useState<"checking" | "ok" | "erro">("checking");
@@ -90,10 +92,26 @@ export default function App() {
             }
           />
           <Route
+            path="/salao/comandas/:comandaId"
+            element={
+              <RequireRole roles={["salao"]}>
+                <ComandaDetalhe />
+              </RequireRole>
+            }
+          />
+          <Route
             path="/cozinha"
             element={
               <RequireRole roles={["cozinha"]}>
                 <CozinhaHome />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/cozinha/kds"
+            element={
+              <RequireRole roles={["cozinha"]}>
+                <KDS />
               </RequireRole>
             }
           />

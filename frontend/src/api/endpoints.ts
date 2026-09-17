@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 import type { Funcionario, Role } from "../types/auth";
-import type { Comanda, Mesa, OrigemAbertura, Produto } from "../types/domain";
+import type { Comanda, Mesa, OrigemAbertura, Pedido, PedidoStatus, Produto } from "../types/domain";
 
 export interface HealthResponse {
   status: string;
@@ -86,4 +86,26 @@ export function abrirComandaPorMesa(numero_mesa: number, origem: OrigemAbertura)
 
 export function fecharComanda(id: string): Promise<Comanda> {
   return apiFetch<Comanda>(`/comandas/${id}/fechar`, { method: "POST" });
+}
+
+export interface CriarPedidoItemInput {
+  produto_id: string;
+  quantidade: number;
+  observacao?: string;
+}
+
+export function criarPedido(comanda_id: string, itens: CriarPedidoItemInput[]): Promise<Pedido> {
+  return apiFetch<Pedido>("/pedidos", { method: "POST", body: JSON.stringify({ comanda_id, itens }) });
+}
+
+export function listPedidos(params: { status?: PedidoStatus; comandaId?: string } = {}): Promise<Pedido[]> {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status_filtro", params.status);
+  if (params.comandaId) query.set("comanda_id", params.comandaId);
+  const qs = query.toString();
+  return apiFetch<Pedido[]>(`/pedidos${qs ? `?${qs}` : ""}`);
+}
+
+export function atualizarStatusPedido(id: string, status: PedidoStatus): Promise<Pedido> {
+  return apiFetch<Pedido>(`/pedidos/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
 }
