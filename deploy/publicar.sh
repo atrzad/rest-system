@@ -20,9 +20,10 @@ MANTER_RELEASES=3
 falhar() { echo "✗ $*" >&2; exit 1; }
 passo() { echo "→ $*"; }
 
-# docker sem relogar depois de entrar no grupo docker: cai para `sg docker`.
+# Sessão que ainda não "pegou" o grupo docker (entrou no grupo sem relogar): roda via newgrp.
+# (Só para comandos que não leem a entrada padrão, já que o newgrp a usa para receber o comando.)
 docker_() {
-  if docker info >/dev/null 2>&1; then docker "$@"; else sg docker -c "$(printf '%q ' docker "$@")"; fi
+  if docker info >/dev/null 2>&1; then docker "$@"; else printf '%q ' docker "$@" | newgrp docker; fi
 }
 
 [[ -f "$ENV_PROD" ]] || falhar "Falta $ENV_PROD (modelo em deploy/producao.env.example)"
