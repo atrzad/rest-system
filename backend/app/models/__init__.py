@@ -7,6 +7,7 @@ from app.models.pedido import Pedido, PedidoStatus
 from app.models.pedido_item import PedidoItem
 from app.models.produto import Produto
 from app.models.roles import Role
+from app.models.venda_evento import VendaEvento
 
 __all__ = [
     "Chamado",
@@ -21,4 +22,5 @@ __all__ = [
     "PedidoItem",
     "Produto",
     "Role",
+    "VendaEvento",
 ]

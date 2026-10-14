@@ -14,6 +14,7 @@ from app.models.pedido_item import PedidoItem
 from app.models.produto import Produto
 from app.models.roles import Role
 from app.schemas.pedido import PedidoItemCreate, PedidoItemOut, PedidoOut
+from app.services import venda_evento_service
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,16 @@ async def criar_pedido(db: AsyncSession, comanda_id: uuid.UUID, itens: list[Pedi
                 observacao=item.observacao,
             )
         )
+        venda_evento_service.registrar(
+            db,
+            "pedido_item_criado",
+            comanda_id=comanda_id,
+            pedido_id=pedido.id,
+            produto_id=produto.id,
+            quantidade=item.quantidade,
+            valor=produto.preco * item.quantidade,
+            payload={"produto_nome": produto.nome, "categoria": produto.categoria},
+        )
 
     await db.commit()
     await db.refresh(pedido)
@@ -204,7 +215,33 @@ async def atualizar_status(
             f"O perfil '{role.value}' não pode mudar um pedido de '{pedido.status.value}' para '{novo_status.value}'",
         )
 
+    status_anterior = pedido.status
     pedido.status = novo_status
+    venda_evento_service.registrar(
+        db,
+        "pedido_status",
+        comanda_id=pedido.comanda_id,
+        pedido_id=pedido.id,
+        payload={"de": status_anterior.value, "para": novo_status.value},
+    )
+    if novo_status == PedidoStatus.cancelado:
+        # Estorna no dashboard o que o pedido tinha somado (quantidade e valor negativos).
+        itens = await db.execute(
+            select(PedidoItem, Produto.nome, Produto.categoria)
+            .join(Produto, PedidoItem.produto_id == Produto.id)
+            .where(PedidoItem.pedido_id == pedido.id)
+        )
+        for item, nome, categoria in itens.all():
+            venda_evento_service.registrar(
+                db,
+                "pedido_item_cancelado",
+                comanda_id=pedido.comanda_id,
+                pedido_id=pedido.id,
+                produto_id=item.produto_id,
+                quantidade=-item.quantidade,
+                valor=-(item.preco_unitario * item.quantidade),
+                payload={"produto_nome": nome, "categoria": categoria},
+            )
     await db.commit()
     await db.refresh(pedido)
 

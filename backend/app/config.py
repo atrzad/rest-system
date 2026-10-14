@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     # Endereço do frontend que o cliente acessa pelo QR da mesa (vai dentro do QR code).
     public_base_url: str = "http://localhost:5173"
+    # Fuso usado para "hoje", "por hora" e "por dia" no dashboard.
+    timezone_local: str = "America/Manaus"
 
     @property
     def cors_origins_list(self) -> list[str]:

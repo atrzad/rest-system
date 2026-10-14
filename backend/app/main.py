@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.logging_db import configurar_logging, escrever_logs
-from app.routers import auth, chamados, comandas, funcionarios, mesas, pedidos, produtos, publico, ws
+from app.routers import auth, chamados, comandas, dashboard, funcionarios, mesas, pedidos, produtos, publico, ws
 from app.ws.router_bridge import escutar_eventos
 
 logger = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ app.include_router(comandas.router)
 app.include_router(pedidos.router)
 app.include_router(chamados.router)
 app.include_router(publico.router)
+app.include_router(dashboard.router)
 app.include_router(ws.router)
 
 

@@ -93,3 +93,28 @@ export interface MesaPublica {
   pedidos: Pedido[];
   chamado_aberto: boolean;
 }
+
+export interface PontoSerie {
+  rotulo: string;
+  inicio: string;
+  valor: string;
+  itens: number;
+}
+
+export interface DashboardVendas {
+  inicio: string;
+  fim: string;
+  fuso: string;
+  faturamento: string;
+  taxa_servico: string;
+  comandas_fechadas: number;
+  ticket_medio: string;
+  comandas_abertas_agora: number;
+  consumo: string;
+  itens_vendidos: number;
+  tempo_medio_preparo_min: number | null;
+  granularidade: "hora" | "dia";
+  serie: PontoSerie[];
+  top_produtos: { produto_id: string; nome: string; quantidade: number; valor: string }[];
+  por_categoria: { categoria: string; quantidade: number; valor: string }[];
+}

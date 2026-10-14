@@ -10,6 +10,9 @@ export default function AdminHome() {
       <h1>Painel admin</h1>
       <p>Bem-vindo, {user?.nome}.</p>
       <p>
+        <Link to="/admin/dashboard">Vendas (dashboard)</Link>
+      </p>
+      <p>
         <Link to="/admin/funcionarios">Funcionários</Link>
       </p>
       <p>

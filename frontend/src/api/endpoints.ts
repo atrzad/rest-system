@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 import type { Funcionario, Role } from "../types/auth";
-import type { Chamado, Comanda, Conta, Mesa, MesaPublica, Pedido, PedidoStatus, Produto } from "../types/domain";
+import type { Chamado, Comanda, Conta, DashboardVendas, Mesa, MesaPublica, Pedido, PedidoStatus, Produto } from "../types/domain";
 
 export interface HealthResponse {
   status: string;
@@ -153,4 +153,8 @@ export function chamarGarcom(numero: number, token: string): Promise<Chamado> {
 
 export function getContaPublica(numero: number, token: string): Promise<Conta> {
   return apiFetch<Conta>(rotaPublica(numero, token, "/conta"));
+}
+
+export function getDashboardVendas(dias: number): Promise<DashboardVendas> {
+  return apiFetch<DashboardVendas>(`/dashboard/vendas?dias=${dias}`);
 }

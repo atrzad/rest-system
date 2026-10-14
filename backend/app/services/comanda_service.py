@@ -16,6 +16,7 @@ from app.models.pedido import Pedido, PedidoStatus
 from app.models.pedido_item import PedidoItem
 from app.models.produto import Produto
 from app.schemas.comanda import ContaItemOut, ContaOut
+from app.services import venda_evento_service
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +141,13 @@ async def fechar(db: AsyncSession, comanda_id: uuid.UUID, com_taxa: bool) -> Com
     comanda.subtotal = conta.subtotal
     comanda.taxa_servico = conta.taxa_servico
     comanda.total = conta.total
+    venda_evento_service.registrar(
+        db,
+        "comanda_fechada",
+        comanda_id=comanda.id,
+        valor=conta.total,
+        payload={"subtotal": str(conta.subtotal), "taxa_servico": str(conta.taxa_servico), "mesa": conta.mesa_numero},
+    )
     await db.commit()
     await db.refresh(comanda)
 

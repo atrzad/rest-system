@@ -30,7 +30,7 @@ export default function Mesas() {
         listComandas("aberta"),
         listPedidos({ status: "pronto" }),
       ]);
-      setMesas(listaMesas);
+      setMesas(listaMesas.filter((m) => m.ativa));
       setComandasAbertas(listaComandas);
       const contagem: Record<string, number> = {};
       for (const pedido of prontos) contagem[pedido.comanda_id] = (contagem[pedido.comanda_id] ?? 0) + 1;

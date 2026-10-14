@@ -23,7 +23,7 @@ ROTEAMENTO_POR_TIPO: dict[str, list[Role]] = {
     "pedido_pronto": [Role.salao],
     "pedido_entregue": [Role.salao],
     "pedido_cancelado": [Role.cozinha, Role.salao],
-    "comanda_fechada": [Role.salao],
+    "comanda_fechada": [Role.salao, Role.admin],
 }
 
 

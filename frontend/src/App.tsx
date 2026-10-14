@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { getHealth } from "./api/endpoints";
@@ -17,6 +17,9 @@ import MesasSalao from "./pages/salao/Mesas";
 import ComandaDetalhe from "./pages/salao/ComandaDetalhe";
 import CozinhaHome from "./pages/cozinha/CozinhaHome";
 import KDS from "./pages/cozinha/KDS";
+
+// Carregado sob demanda: o Recharts é pesado e só o admin usa (o cliente no celular não baixa).
+const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 
 function ApiStatus() {
   const [status, setStatus] = useState<"checking" | "ok" | "erro">("checking");
@@ -75,6 +78,16 @@ export default function App() {
             element={
               <RequireRole roles={["admin"]}>
                 <MesasAdmin />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <RequireRole roles={["admin"]}>
+                <Suspense fallback={<p>Carregando...</p>}>
+                  <Dashboard />
+                </Suspense>
               </RequireRole>
             }
           />
