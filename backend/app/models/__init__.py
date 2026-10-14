@@ -1,3 +1,4 @@
+from app.models.chamado import Chamado
 from app.models.comanda import Comanda, ComandaStatus, OrigemAbertura
 from app.models.funcionario import Funcionario
 from app.models.log_entry import LogEntry
@@ -8,6 +9,7 @@ from app.models.produto import Produto
 from app.models.roles import Role
 
 __all__ = [
+    "Chamado",
     "Comanda",
     "ComandaStatus",
     "OrigemAbertura",

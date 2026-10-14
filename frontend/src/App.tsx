@@ -9,6 +9,9 @@ import AdminHome from "./pages/admin/AdminHome";
 import Funcionarios from "./pages/admin/Funcionarios";
 import Cardapio from "./pages/admin/Cardapio";
 import MesasAdmin from "./pages/admin/Mesas";
+import ImprimirQR from "./pages/admin/ImprimirQR";
+import EntrarMesa from "./pages/cliente/EntrarMesa";
+import SelfView from "./pages/cliente/SelfView";
 import SalaoHome from "./pages/salao/SalaoHome";
 import MesasSalao from "./pages/salao/Mesas";
 import ComandaDetalhe from "./pages/salao/ComandaDetalhe";
@@ -75,6 +78,17 @@ export default function App() {
               </RequireRole>
             }
           />
+          <Route
+            path="/admin/mesas/imprimir"
+            element={
+              <RequireRole roles={["admin"]}>
+                <ImprimirQR />
+              </RequireRole>
+            }
+          />
+          {/* Rotas públicas do cliente (sem login): o QR da mesa aponta para /mesa/:numero?t=TOKEN */}
+          <Route path="/mesa" element={<EntrarMesa />} />
+          <Route path="/mesa/:numero" element={<SelfView />} />
           <Route
             path="/salao"
             element={

@@ -11,6 +11,9 @@ export interface Mesa {
   numero: number;
   capacidade: number | null;
   ativa: boolean;
+  /** Só vem preenchido para admin (segredo do QR). */
+  token: string | null;
+  url_qr: string | null;
 }
 
 export type ComandaStatus = "aberta" | "fechada";
@@ -66,4 +69,27 @@ export interface Pedido {
   criado_em: string;
   atualizado_em: string;
   itens: PedidoItem[];
+}
+
+export interface Chamado {
+  id: string;
+  mesa_numero: number;
+  comanda_id: string | null;
+  criado_em: string;
+  atendido_em: string | null;
+}
+
+export interface ProdutoPublico {
+  id: string;
+  nome: string;
+  categoria: string;
+  preco: string;
+}
+
+export interface MesaPublica {
+  numero: number;
+  cardapio: ProdutoPublico[];
+  comanda: { id: string; status: ComandaStatus } | null;
+  pedidos: Pedido[];
+  chamado_aberto: boolean;
 }

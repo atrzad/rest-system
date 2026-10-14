@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -9,7 +10,10 @@ from app.models.comanda import ComandaStatus, OrigemAbertura
 
 class AbrirComandaRequest(BaseModel):
     numero_mesa: int
-    origem: OrigemAbertura
+
+
+class AbrirComandaPublicaRequest(BaseModel):
+    origem: Literal[OrigemAbertura.cliente_qr, OrigemAbertura.cliente_manual] = OrigemAbertura.cliente_qr
 
 
 class FecharComandaRequest(BaseModel):

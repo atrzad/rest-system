@@ -4,12 +4,11 @@ from httpx import AsyncClient
 
 from app.models.funcionario import Funcionario
 from app.models.mesa import Mesa
-from tests.conftest import auth_header, criar_produto
+from tests.conftest import abrir_comanda, auth_header, criar_produto, header_staff
 
 
 async def _abrir_comanda(client: AsyncClient, mesa: Mesa) -> str:
-    resposta = await client.post("/comandas/abrir-por-mesa", json={"numero_mesa": mesa.numero, "origem": "garcom"})
-    return resposta.json()["id"]
+    return await abrir_comanda(client, mesa.numero)
 
 
 async def _lancar(client: AsyncClient, salao: Funcionario, comanda_id: str, itens: list[tuple[str, int]]) -> str:
@@ -102,7 +101,7 @@ async def test_fechar_sem_corpo_aplica_taxa_por_padrao(
 async def test_abertura_simultanea_cria_uma_comanda_so(client: AsyncClient, salao: Funcionario, mesa: Mesa):
     respostas = await asyncio.gather(
         *(
-            client.post("/comandas/abrir-por-mesa", json={"numero_mesa": mesa.numero, "origem": "garcom"})
+            client.post("/comandas/abrir-por-mesa", headers=header_staff(), json={"numero_mesa": mesa.numero})
             for _ in range(5)
         )
     )
@@ -129,7 +128,7 @@ async def test_abertura_concorrente_cai_no_indice_e_devolve_a_existente(
         return None if chamadas["n"] == 1 else await original(db, mesa_id)
 
     monkeypatch.setattr(comanda_service, "_comanda_aberta_da_mesa", nao_ve_na_primeira)
-    resposta = await client.post("/comandas/abrir-por-mesa", json={"numero_mesa": mesa.numero, "origem": "garcom"})
+    resposta = await client.post("/comandas/abrir-por-mesa", headers=header_staff(), json={"numero_mesa": mesa.numero})
 
     assert resposta.status_code == 200
     assert resposta.json()["id"] == primeira

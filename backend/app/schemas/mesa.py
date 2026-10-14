@@ -20,3 +20,6 @@ class MesaOut(BaseModel):
     numero: int
     capacidade: int | None
     ativa: bool
+    # Só preenchido para admin (é o segredo do QR); o salão recebe None.
+    token: str | None = None
+    url_qr: str | None = None

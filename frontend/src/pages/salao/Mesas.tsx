@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { abrirComandaPorMesa, fecharComanda, getConta, listComandas, listMesas, listPedidos } from "../../api/endpoints";
+import ChamadosBanner from "../../components/ChamadosBanner";
 import type { Comanda, Conta, Mesa } from "../../types/domain";
 import { formatarReais } from "../../utils/formatar";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
@@ -59,7 +60,7 @@ export default function Mesas() {
   async function handleAbrir(mesa: Mesa) {
     setAcaoEmAndamento(mesa.id);
     try {
-      await abrirComandaPorMesa(mesa.numero, "garcom");
+      await abrirComandaPorMesa(mesa.numero);
       await carregar();
     } catch (err) {
       setErro(err instanceof ApiError ? err.message : "Erro ao abrir comanda");
@@ -114,6 +115,7 @@ export default function Mesas() {
 
   return (
     <main style={{ maxWidth: 640, margin: "5vh auto", fontFamily: "sans-serif" }}>
+      <ChamadosBanner />
       <p>
         <Link to="/salao">← voltar</Link>
       </p>

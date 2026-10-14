@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { atualizarStatusPedido, criarPedido, getConta, listPedidos, listProdutos } from "../../api/endpoints";
+import ChamadosBanner from "../../components/ChamadosBanner";
 import type { Conta, Pedido, PedidoStatus, Produto } from "../../types/domain";
 import { NOME_STATUS_PEDIDO, formatarReais } from "../../utils/formatar";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
@@ -113,6 +114,7 @@ export default function ComandaDetalhe() {
 
   return (
     <main style={{ maxWidth: 640, margin: "5vh auto", fontFamily: "sans-serif" }}>
+      <ChamadosBanner />
       <p>
         <Link to="/salao/mesas">← voltar</Link>
       </p>

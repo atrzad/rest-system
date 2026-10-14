@@ -17,6 +17,7 @@ ESPERA_MAXIMA = 30
 ROTEAMENTO_POR_TIPO: dict[str, list[Role]] = {
     "comanda_aberta": [Role.salao],
     "garcom_chamado": [Role.salao],
+    "chamado_atendido": [Role.salao],
     "pedido_criado": [Role.cozinha],
     "pedido_em_preparo": [Role.salao],
     "pedido_pronto": [Role.salao],

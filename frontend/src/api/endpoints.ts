@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 import type { Funcionario, Role } from "../types/auth";
-import type { Comanda, Conta, Mesa, OrigemAbertura, Pedido, PedidoStatus, Produto } from "../types/domain";
+import type { Chamado, Comanda, Conta, Mesa, MesaPublica, Pedido, PedidoStatus, Produto } from "../types/domain";
 
 export interface HealthResponse {
   status: string;
@@ -72,15 +72,19 @@ export function criarMesa(dados: { numero: number; capacidade?: number | null })
   return apiFetch<Mesa>("/mesas", { method: "POST", body: JSON.stringify(dados) });
 }
 
+export function regenerarTokenMesa(id: string): Promise<Mesa> {
+  return apiFetch<Mesa>(`/mesas/${id}/regenerar-token`, { method: "POST" });
+}
+
 export function listComandas(status?: "aberta" | "fechada"): Promise<Comanda[]> {
   const query = status ? `?status_filtro=${status}` : "";
   return apiFetch<Comanda[]>(`/comandas${query}`);
 }
 
-export function abrirComandaPorMesa(numero_mesa: number, origem: OrigemAbertura): Promise<Comanda> {
+export function abrirComandaPorMesa(numero_mesa: number): Promise<Comanda> {
   return apiFetch<Comanda>("/comandas/abrir-por-mesa", {
     method: "POST",
-    body: JSON.stringify({ numero_mesa, origem }),
+    body: JSON.stringify({ numero_mesa }),
   });
 }
 
@@ -115,4 +119,38 @@ export function listPedidos(params: { status?: PedidoStatus; comandaId?: string 
 
 export function atualizarStatusPedido(id: string, status: PedidoStatus): Promise<Pedido> {
   return apiFetch<Pedido>(`/pedidos/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+}
+
+export function listChamados(): Promise<Chamado[]> {
+  return apiFetch<Chamado[]>("/chamados");
+}
+
+export function atenderChamado(id: string): Promise<Chamado> {
+  return apiFetch<Chamado>(`/chamados/${id}/atender`, { method: "POST" });
+}
+
+// --- Rotas públicas do cliente na mesa (sem login; o token do QR vai em ?t=) ---
+
+function rotaPublica(numero: number, token: string, sufixo = ""): string {
+  return `/publico/mesas/${numero}${sufixo}?t=${encodeURIComponent(token)}`;
+}
+
+export function getMesaPublica(numero: number, token: string): Promise<MesaPublica> {
+  return apiFetch<MesaPublica>(rotaPublica(numero, token));
+}
+
+export function abrirComandaPublica(
+  numero: number,
+  token: string,
+  origem: "cliente_qr" | "cliente_manual",
+): Promise<{ id: string; status: string }> {
+  return apiFetch(rotaPublica(numero, token, "/comanda"), { method: "POST", body: JSON.stringify({ origem }) });
+}
+
+export function chamarGarcom(numero: number, token: string): Promise<Chamado> {
+  return apiFetch<Chamado>(rotaPublica(numero, token, "/chamar-garcom"), { method: "POST" });
+}
+
+export function getContaPublica(numero: number, token: string): Promise<Conta> {
+  return apiFetch<Conta>(rotaPublica(numero, token, "/conta"));
 }

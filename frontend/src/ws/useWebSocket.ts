@@ -7,8 +7,8 @@ export function wsUrlParaStaff(): string | null {
   return token ? `${WS_URL}/ws?token=${encodeURIComponent(token)}` : null;
 }
 
-export function wsUrlParaMesa(numeroMesa: number): string {
-  return `${WS_URL}/ws?mesa=${numeroMesa}`;
+export function wsUrlParaMesa(numeroMesa: number, token: string): string {
+  return `${WS_URL}/ws?mesa=${numeroMesa}&t=${encodeURIComponent(token)}`;
 }
 
 export interface EventoEnvelope {

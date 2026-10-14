@@ -3,12 +3,11 @@ from httpx import AsyncClient
 from app.models.funcionario import Funcionario
 from app.models.mesa import Mesa
 from app.models.produto import Produto
-from tests.conftest import auth_header, criar_mesa, criar_produto
+from tests.conftest import abrir_comanda, auth_header, criar_mesa, criar_produto
 
 
 async def _abrir_comanda(client: AsyncClient, mesa: Mesa) -> str:
-    resposta = await client.post("/comandas/abrir-por-mesa", json={"numero_mesa": mesa.numero, "origem": "garcom"})
-    return resposta.json()["id"]
+    return await abrir_comanda(client, mesa.numero)
 
 
 async def test_criar_pedido_com_sucesso(client: AsyncClient, salao: Funcionario, mesa: Mesa, produto: Produto):

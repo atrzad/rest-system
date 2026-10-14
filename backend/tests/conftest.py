@@ -122,3 +122,17 @@ def auth_header(funcionario: Funcionario) -> dict[str, str]:
         email=funcionario.email,
     )
     return {"Authorization": f"Bearer {token}"}
+
+
+def header_staff(role: Role = Role.salao) -> dict[str, str]:
+    """Token válido de um funcionário fictício (require_role não consulta o banco)."""
+    token = criar_access_token(sub=str(uuid.uuid4()), role=role.value, nome="Fictício", email="ficticio@teste.com")
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def abrir_comanda(client: AsyncClient, numero_mesa: int) -> str:
+    resposta = await client.post(
+        "/comandas/abrir-por-mesa", headers=header_staff(), json={"numero_mesa": numero_mesa}
+    )
+    assert resposta.status_code == 200, resposta.text
+    return resposta.json()["id"]

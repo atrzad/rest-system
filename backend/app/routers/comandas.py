@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import require_role
 from app.db.session import get_db
-from app.models.comanda import Comanda, ComandaStatus
+from app.models.comanda import Comanda, ComandaStatus, OrigemAbertura
 from app.models.mesa import Mesa
 from app.models.roles import Role
 from app.schemas.comanda import AbrirComandaRequest, ComandaOut, ContaOut, FecharComandaRequest
@@ -30,9 +30,12 @@ def _to_out(comanda: Comanda, mesa_numero: int) -> ComandaOut:
     )
 
 
-@router.post("/abrir-por-mesa", response_model=ComandaOut)
+@router.post(
+    "/abrir-por-mesa", response_model=ComandaOut, dependencies=[Depends(require_role(Role.admin, Role.salao))]
+)
 async def abrir_por_mesa(dados: AbrirComandaRequest, db: AsyncSession = Depends(get_db)) -> ComandaOut:
-    comanda = await comanda_service.abrir_por_mesa(db, dados.numero_mesa, dados.origem)
+    """Abertura pelo garçom. O cliente abre pela rota pública /publico/mesas/{numero}/comanda (com token)."""
+    comanda = await comanda_service.abrir_por_mesa(db, dados.numero_mesa, OrigemAbertura.garcom)
     return _to_out(comanda, dados.numero_mesa)
 
 
