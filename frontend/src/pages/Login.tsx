@@ -37,7 +37,7 @@ export default function Login() {
   }
 
   return (
-    <main style={{ maxWidth: 320, margin: "10vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina" style={{ maxWidth: 360, marginTop: "10vh" }}>
       <h1>Rest System</h1>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <label>
@@ -60,7 +60,7 @@ export default function Login() {
             style={{ width: "100%" }}
           />
         </label>
-        {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+        {erro && <p className="erro">{erro}</p>}
         <button type="submit" disabled={enviando}>
           {enviando ? "Entrando..." : "Entrar"}
         </button>

@@ -63,7 +63,7 @@ export default function Mesas() {
   }
 
   return (
-    <main style={{ maxWidth: 480, margin: "5vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina">
       <p>
         <Link to="/admin">← voltar</Link>
       </p>
@@ -93,7 +93,7 @@ export default function Mesas() {
         </button>
       </form>
 
-      {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+      {erro && <p className="erro">{erro}</p>}
 
       {carregando ? (
         <p>Carregando...</p>

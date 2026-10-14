@@ -15,7 +15,7 @@ export default function EntrarMesa() {
   }
 
   return (
-    <main style={{ maxWidth: 360, margin: "10vh auto", padding: 16, fontFamily: "sans-serif" }}>
+    <main className="pagina" style={{ maxWidth: 360, marginTop: "8vh" }}>
       <h1>Entrar na mesa</h1>
       <p>Digite o número da mesa e o código que aparece embaixo do QR code.</p>
       <form onSubmit={handleEntrar} style={{ display: "flex", flexDirection: "column", gap: 12 }}>

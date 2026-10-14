@@ -56,25 +56,28 @@ export default function ChamadosBanner() {
         position: "sticky",
         top: 0,
         zIndex: 10,
-        background: "#fde68a",
-        color: "#3b2f00",
+        background: "var(--chamado-fundo)",
+        color: "var(--chamado-texto)",
         padding: "8px 12px",
         display: "flex",
         flexWrap: "wrap",
         gap: 8,
         alignItems: "center",
-        fontFamily: "sans-serif",
+        borderRadius: 8,
+        marginTop: 8,
       }}
     >
-      {erro && <span style={{ color: "crimson" }}>{erro}</span>}
+      {erro && <span className="erro">{erro}</span>}
       {chamados.map((chamado) => (
         <span
           key={chamado.id}
-          style={{ background: "#fff8dc", borderRadius: 6, padding: "4px 8px", display: "inline-flex", gap: 8 }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
         >
           <strong>Mesa {chamado.mesa_numero} chamou</strong>
           <span>{tempoDesde(chamado.criado_em)}</span>
-          <button onClick={() => handleAtender(chamado)}>Atender</button>
+          <button className="primario" onClick={() => handleAtender(chamado)}>
+            Atender
+          </button>
         </span>
       ))}
     </div>

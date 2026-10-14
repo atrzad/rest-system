@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8000";
 
@@ -20,10 +20,24 @@ export interface EventoEnvelope {
   payload: Record<string, unknown>;
 }
 
-/** Conecta ao WebSocket e chama onEvento a cada mensagem. Reconecta sozinho se a conexão cair. */
-export function useWebSocket(url: string | null, onEvento: (evento: EventoEnvelope) => void) {
+/**
+ * Conecta ao WebSocket e chama onEvento a cada mensagem. Reconecta sozinho se a conexão cair.
+ * Devolve se está conectado agora (para o indicador de tempo real nas telas).
+ * Ao reconectar, chama onReconectar: eventos perdidos enquanto estava fora não voltam, então a tela recarrega.
+ */
+export function useWebSocket(
+  url: string | null,
+  onEvento: (evento: EventoEnvelope) => void,
+  onReconectar?: () => void,
+): boolean {
   const onEventoRef = useRef(onEvento);
-  onEventoRef.current = onEvento;
+  const onReconectarRef = useRef(onReconectar);
+  const [conectado, setConectado] = useState(false);
+
+  useEffect(() => {
+    onEventoRef.current = onEvento;
+    onReconectarRef.current = onReconectar;
+  });
 
   useEffect(() => {
     if (!url) return;
@@ -31,9 +45,16 @@ export function useWebSocket(url: string | null, onEvento: (evento: EventoEnvelo
     let socket: WebSocket | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let cancelado = false;
+    let jaConectou = false;
 
     function conectar() {
       socket = new WebSocket(url as string);
+
+      socket.onopen = () => {
+        setConectado(true);
+        if (jaConectou) onReconectarRef.current?.();
+        jaConectou = true;
+      };
 
       socket.onmessage = (event) => {
         try {
@@ -44,6 +65,7 @@ export function useWebSocket(url: string | null, onEvento: (evento: EventoEnvelo
       };
 
       socket.onclose = () => {
+        setConectado(false);
         if (!cancelado) {
           timeoutId = setTimeout(conectar, 2000);
         }
@@ -58,4 +80,6 @@ export function useWebSocket(url: string | null, onEvento: (evento: EventoEnvelo
       socket?.close();
     };
   }, [url]);
+
+  return conectado;
 }

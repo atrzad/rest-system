@@ -70,7 +70,7 @@ export default function Dashboard() {
   const tituloSerie = dados?.granularidade === "dia" ? "Consumo por dia" : "Consumo por hora";
 
   return (
-    <main style={{ maxWidth: 1000, margin: "3vh auto", padding: "0 16px", fontFamily: "sans-serif", textAlign: "left" }}>
+    <main className="pagina-larga">
       <p>
         <Link to="/admin">← voltar</Link>
       </p>
@@ -101,7 +101,7 @@ export default function Dashboard() {
         10s
       </p>
 
-      {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+      {erro && <p className="erro">{erro}</p>}
       {!dados && !erro && <p>Carregando...</p>}
 
       {dados && (

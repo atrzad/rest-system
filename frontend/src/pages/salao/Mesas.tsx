@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { ApiError } from "../../api/client";
 import { abrirComandaPorMesa, fecharComanda, getConta, listComandas, listMesas, listPedidos } from "../../api/endpoints";
 import ChamadosBanner from "../../components/ChamadosBanner";
+import Conexao from "../../components/Conexao";
 import type { Comanda, Conta, Mesa } from "../../types/domain";
 import { formatarReais } from "../../utils/formatar";
+import { tocarAlerta } from "../../utils/som";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
 
 export default function Mesas() {
@@ -23,7 +25,6 @@ export default function Mesas() {
   const [erroFechamento, setErroFechamento] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
-    setCarregando(true);
     try {
       const [listaMesas, listaComandas, prontos] = await Promise.all([
         listMesas(),
@@ -47,11 +48,14 @@ export default function Mesas() {
     carregar();
   }, [carregar]);
 
-  useWebSocket(wsUrlParaStaff(), (evento) => {
-    if (evento.tipo.startsWith("pedido_") || evento.tipo.startsWith("comanda_") || evento.tipo === "garcom_chamado") {
-      carregar();
-    }
-  });
+  const conectado = useWebSocket(
+    wsUrlParaStaff(),
+    (evento) => {
+      if (evento.tipo === "pedido_pronto") tocarAlerta(1);
+      if (evento.tipo.startsWith("pedido_") || evento.tipo.startsWith("comanda_")) carregar();
+    },
+    carregar,
+  );
 
   function comandaDaMesa(mesa: Mesa): Comanda | undefined {
     return comandasAbertas.find((c) => c.mesa_id === mesa.id);
@@ -114,14 +118,15 @@ export default function Mesas() {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: "5vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina">
       <ChamadosBanner />
-      <p>
+      <div className="linha-entre" style={{ marginTop: 8 }}>
         <Link to="/salao">← voltar</Link>
-      </p>
+        <Conexao conectado={conectado} />
+      </div>
       <h1>Mesas</h1>
 
-      {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+      {erro && <p className="erro">{erro}</p>}
 
       {carregando ? (
         <p>Carregando...</p>
@@ -133,17 +138,14 @@ export default function Mesas() {
             return (
               <div
                 key={mesa.id}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: 8,
-                  padding: 12,
-                  background: comanda ? "#fff7e6" : "#f4f4f4",
-                }}
+                className={`cartao${comanda ? (prontosPorComanda[comanda.id] ? " pronto" : " ocupada") : ""}`}
               >
-                <strong>Mesa {mesa.numero}</strong>
-                <p style={{ margin: "4px 0" }}>{comanda ? "Ocupada" : "Livre"}</p>
+                <strong style={{ fontSize: 18 }}>Mesa {mesa.numero}</strong>
+                <p className="texto-2" style={{ margin: "4px 0" }}>
+                  {comanda ? "Ocupada" : "Livre"}
+                </p>
                 {comanda && prontosPorComanda[comanda.id] ? (
-                  <p style={{ margin: "4px 0", color: "#1a7f37", fontWeight: "bold" }}>
+                  <p className="sucesso" style={{ margin: "4px 0" }}>
                     {prontosPorComanda[comanda.id]} pronto(s) para entregar
                   </p>
                 ) : null}
@@ -155,7 +157,7 @@ export default function Mesas() {
                     </button>
                   </div>
                 ) : (
-                  <button disabled={emAndamento || !mesa.ativa} onClick={() => handleAbrir(mesa)}>
+                  <button className="primario" disabled={emAndamento || !mesa.ativa} onClick={() => handleAbrir(mesa)}>
                     Abrir comanda
                   </button>
                 )}
@@ -166,18 +168,8 @@ export default function Mesas() {
       )}
 
       {fechando && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <div style={{ background: "#fff", borderRadius: 8, padding: 16, width: "100%", maxWidth: 420 }}>
+        <div className="modal-fundo">
+          <div className="modal" role="dialog" aria-modal="true" aria-label={`Fechar conta da mesa ${fechando.mesa_numero}`}>
             <h2 style={{ marginTop: 0 }}>Fechar conta — Mesa {fechando.mesa_numero}</h2>
             {!conta && !erroFechamento && <p>Calculando...</p>}
             {conta && (
@@ -185,7 +177,7 @@ export default function Mesas() {
                 {conta.itens.length === 0 ? (
                   <p>Nenhum item consumido.</p>
                 ) : (
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <table style={{ width: "100%" }}>
                     <tbody>
                       {conta.itens.map((item) => (
                         <tr key={`${item.produto_id}-${item.preco_unitario}`}>
@@ -199,32 +191,33 @@ export default function Mesas() {
                   </table>
                 )}
                 <hr />
-                <p style={{ display: "flex", justifyContent: "space-between", margin: "4px 0" }}>
+                <p className="linha-entre" style={{ margin: "4px 0" }}>
                   <span>Subtotal</span>
                   <span>{formatarReais(conta.subtotal)}</span>
                 </p>
-                <label style={{ display: "flex", justifyContent: "space-between", margin: "4px 0" }}>
+                <label className="linha-entre" style={{ margin: "4px 0" }}>
                   <span>
                     <input type="checkbox" checked={comTaxa} onChange={(e) => setComTaxa(e.target.checked)} /> Taxa
                     de serviço (10%)
                   </span>
                   <span>{formatarReais(conta.taxa_servico)}</span>
                 </label>
-                <p style={{ display: "flex", justifyContent: "space-between", fontSize: 20, margin: "8px 0" }}>
+                <p className="linha-entre" style={{ fontSize: 20, margin: "8px 0" }}>
                   <strong>Total</strong>
                   <strong>{formatarReais(conta.total)}</strong>
                 </p>
                 {conta.pedidos_pendentes > 0 && (
-                  <p style={{ color: "#b45309" }}>
+                  <p className="aviso">
                     Há {conta.pedidos_pendentes} pedido(s) ainda não entregue(s). Entregue ou cancele antes de fechar.
                   </p>
                 )}
               </>
             )}
-            {erroFechamento && <p style={{ color: "crimson" }}>{erroFechamento}</p>}
+            {erroFechamento && <p className="erro">{erroFechamento}</p>}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
               <button onClick={handleCancelarFechamento}>Voltar</button>
               <button
+                className="primario"
                 onClick={handleConfirmarFechamento}
                 disabled={!conta || conta.pedidos_pendentes > 0 || acaoEmAndamento === fechando.id}
               >

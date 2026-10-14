@@ -114,14 +114,15 @@ export default function SelfView() {
           borderRadius: 12,
           border: "none",
           color: "#fff",
-          background: mesa.chamado_aberto ? "#15803d" : "#b45309",
+          background: mesa.chamado_aberto ? "#15803d" : "#b45309", // fixos: texto branco legível nos dois temas
           cursor: mesa.chamado_aberto ? "default" : "pointer",
+          opacity: 1, // desabilitado de propósito quando já chamou, mas a confirmação precisa ficar bem visível
         }}
       >
         {mesa.chamado_aberto ? "Garçom a caminho ✓" : chamando ? "Chamando..." : "Chamar garçom"}
       </button>
 
-      {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+      {erro && <p className="erro">{erro}</p>}
 
       <section>
         <h2>Seus pedidos</h2>
@@ -187,16 +188,11 @@ function Linha({ rotulo, valor }: { rotulo: React.ReactNode; valor: React.ReactN
   );
 }
 
-const estiloPagina: React.CSSProperties = {
-  maxWidth: 480,
-  margin: "0 auto",
-  padding: 16,
-  fontFamily: "sans-serif",
-  textAlign: "left",
-};
+const estiloPagina: React.CSSProperties = { maxWidth: 480, margin: "0 auto", padding: 16 };
 
 const estiloCartao: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--borda)",
+  background: "var(--superficie)",
   borderRadius: 8,
   padding: 10,
   marginBottom: 8,

@@ -59,7 +59,7 @@ export default function Cardapio() {
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: "5vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina-larga">
       <p>
         <Link to="/admin">← voltar</Link>
       </p>
@@ -82,7 +82,7 @@ export default function Cardapio() {
         </button>
       </form>
 
-      {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+      {erro && <p className="erro">{erro}</p>}
 
       {carregando ? (
         <p>Carregando...</p>

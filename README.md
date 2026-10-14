@@ -54,6 +54,33 @@ Abre em `http://localhost:5173`.
 - `frontend/src/` — React: `pages/admin`, `pages/salao`, `pages/cozinha`, `pages/cliente`.
 - `docs/eventos.md` — catálogo dos eventos de domínio do sistema.
 
+## Perfis e telas
+
+- **Admin** (`/admin`): funcionários, cardápio, mesas (código/QR de cada mesa, gerar novo código,
+  folha de impressão em `/admin/mesas/imprimir`) e **Vendas** (`/admin/dashboard`).
+- **Salão** (`/salao`): mapa de mesas, comanda com carrinho, marcar entregue/cancelar, fechar conta
+  com resumo e taxa de serviço de 10% opcional, faixa de chamados de garçom com som.
+- **Cozinha** (`/cozinha/kds`): KDS em colunas, tempo desde o pedido (amarelo > 10 min,
+  vermelho > 20 min), som em pedido novo.
+- **Cliente** (público): `/mesa/:numero?t=CÓDIGO` é para onde aponta o QR da mesa; `/mesa` é a
+  entrada manual (número + código impresso embaixo do QR). Mostra pedidos ao vivo, conta parcial,
+  cardápio e o botão "Chamar garçom".
+
+### QR code das mesas
+
+Cada mesa tem um código secreto de 6 caracteres (sem 0/O/1/I) que vai no QR. Sem o código certo,
+as rotas públicas da mesa respondem 404, então ninguém abre comanda ou chama garçom de fora só
+trocando o número na URL. Se um QR vazar, gere um código novo pelo admin e reimprima.
+O endereço dentro do QR vem de `PUBLIC_BASE_URL` no `.env`.
+
+### Regras de negócio
+
+- Uma mesa tem no máximo uma comanda aberta (garantido por índice no banco).
+- Fechar conta exige todos os pedidos entregues ou cancelados (senão a API responde 409).
+- Transições de pedido por perfil: cozinha inicia preparo, marca pronto e cancela (recebido/em
+  preparo); salão marca entregue e cancela só pedido recebido; admin pode tudo.
+- O dashboard usa o fuso `TIMEZONE_LOCAL` (padrão `America/Manaus`) para "hoje", "por hora" e "por dia".
+
 ## Logs internos
 
 Eventos de negócio (login, abertura/fechamento de comanda, pedidos) e exceções não

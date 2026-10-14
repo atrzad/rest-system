@@ -6,7 +6,7 @@ export default function AdminHome() {
   const { user, logout } = useAuth();
 
   return (
-    <main style={{ maxWidth: 480, margin: "10vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina">
       <h1>Painel admin</h1>
       <p>Bem-vindo, {user?.nome}.</p>
       <p>

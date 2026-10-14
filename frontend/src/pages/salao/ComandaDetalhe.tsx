@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../../api/client";
 import { atualizarStatusPedido, criarPedido, getConta, listPedidos, listProdutos } from "../../api/endpoints";
 import ChamadosBanner from "../../components/ChamadosBanner";
+import Conexao from "../../components/Conexao";
 import type { Conta, Pedido, PedidoStatus, Produto } from "../../types/domain";
 import { NOME_STATUS_PEDIDO, formatarReais } from "../../utils/formatar";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
@@ -50,11 +51,13 @@ export default function ComandaDetalhe() {
     carregar();
   }, [carregar]);
 
-  useWebSocket(wsUrlParaStaff(), (evento) => {
-    if (evento.tipo.startsWith("pedido_") && evento.comanda_id === comandaId) {
-      carregar();
-    }
-  });
+  const conectado = useWebSocket(
+    wsUrlParaStaff(),
+    (evento) => {
+      if (evento.tipo.startsWith("pedido_") && evento.comanda_id === comandaId) carregar();
+    },
+    carregar,
+  );
 
   // Cardápio agrupado por categoria, para o <select> com <optgroup>.
   const categorias = useMemo(() => {
@@ -113,11 +116,12 @@ export default function ComandaDetalhe() {
   const totalCarrinho = carrinho.reduce((soma, item) => soma + Number(item.produto.preco) * item.quantidade, 0);
 
   return (
-    <main style={{ maxWidth: 640, margin: "5vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina">
       <ChamadosBanner />
-      <p>
+      <div className="linha-entre" style={{ marginTop: 8 }}>
         <Link to="/salao/mesas">← voltar</Link>
-      </p>
+        <Conexao conectado={conectado} />
+      </div>
       <h1>Comanda{conta ? ` — Mesa ${conta.mesa_numero}` : ""}</h1>
       {conta && (
         <p style={{ fontSize: 18 }}>
@@ -156,52 +160,50 @@ export default function ComandaDetalhe() {
       </form>
 
       {carrinho.length > 0 && (
-        <div style={{ border: "1px dashed #999", borderRadius: 6, padding: 8, marginBottom: 24 }}>
+        <div className="cartao" style={{ borderStyle: "dashed", marginBottom: 24 }}>
           <ul style={{ margin: 0, paddingLeft: 16 }}>
             {carrinho.map((item, indice) => (
               <li key={indice} style={{ marginBottom: 4 }}>
                 {item.quantidade}x {item.produto.nome}
                 {item.observacao ? ` (${item.observacao})` : ""} —{" "}
                 {formatarReais(Number(item.produto.preco) * item.quantidade)}{" "}
-                <button type="button" onClick={() => handleRemover(indice)}>
+                <button type="button" className="perigo" onClick={() => handleRemover(indice)}>
                   remover
                 </button>
               </li>
             ))}
           </ul>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+          <div className="linha-entre" style={{ marginTop: 8 }}>
             <strong>{formatarReais(totalCarrinho)}</strong>
-            <button onClick={handleLancar} disabled={enviando}>
+            <button className="primario" onClick={handleLancar} disabled={enviando}>
               {enviando ? "Lançando..." : `Lançar pedido (${carrinho.length} ${carrinho.length === 1 ? "item" : "itens"})`}
             </button>
           </div>
         </div>
       )}
 
-      {erro && <p style={{ color: "crimson" }}>{erro}</p>}
+      {erro && <p className="erro">{erro}</p>}
 
       <h2>Pedidos</h2>
       {pedidos.length === 0 && <p>Nenhum pedido ainda.</p>}
       {pedidos.map((pedido) => (
         <div
           key={pedido.id}
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 6,
-            padding: 8,
-            marginBottom: 8,
-            background: pedido.status === "pronto" ? "#e8f7e8" : pedido.status === "cancelado" ? "#f4f4f4" : "#fff",
-            opacity: pedido.status === "cancelado" ? 0.6 : 1,
-          }}
+          className={`cartao${pedido.status === "pronto" ? " pronto" : pedido.status === "cancelado" ? " apagado" : ""}`}
+          style={{ marginBottom: 8 }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="linha-entre">
             <strong>{NOME_STATUS_PEDIDO[pedido.status]}</strong>
             <span>
               {pedido.status === "pronto" && (
-                <button onClick={() => handleMudarStatus(pedido, "entregue")}>Marcar entregue</button>
+                <button className="primario" onClick={() => handleMudarStatus(pedido, "entregue")}>
+                  Marcar entregue
+                </button>
               )}
               {pedido.status === "recebido" && (
-                <button onClick={() => handleMudarStatus(pedido, "cancelado")}>Cancelar</button>
+                <button className="perigo" onClick={() => handleMudarStatus(pedido, "cancelado")}>
+                  Cancelar
+                </button>
               )}
             </span>
           </div>

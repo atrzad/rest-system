@@ -1,7 +1,6 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import { getHealth } from "./api/endpoints";
 import { AuthProvider } from "./auth/AuthContext";
 import { RequireRole } from "./auth/RequireRole";
 import Login from "./pages/Login";
@@ -20,28 +19,6 @@ import KDS from "./pages/cozinha/KDS";
 
 // Carregado sob demanda: o Recharts é pesado e só o admin usa (o cliente no celular não baixa).
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
-
-function ApiStatus() {
-  const [status, setStatus] = useState<"checking" | "ok" | "erro">("checking");
-
-  useEffect(() => {
-    getHealth()
-      .then(() => setStatus("ok"))
-      .catch(() => setStatus("erro"));
-  }, []);
-
-  return (
-    <p
-      style={{
-        textAlign: "center",
-        fontFamily: "sans-serif",
-        color: status === "ok" ? "green" : status === "erro" ? "crimson" : "gray",
-      }}
-    >
-      API: {status}
-    </p>
-  );
-}
 
 export default function App() {
   return (
@@ -143,7 +120,6 @@ export default function App() {
             }
           />
         </Routes>
-        <ApiStatus />
       </AuthProvider>
     </BrowserRouter>
   );

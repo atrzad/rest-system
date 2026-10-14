@@ -6,7 +6,7 @@ export default function CozinhaHome() {
   const { user, logout } = useAuth();
 
   return (
-    <main style={{ maxWidth: 480, margin: "10vh auto", fontFamily: "sans-serif" }}>
+    <main className="pagina">
       <h1>Cozinha</h1>
       <p>Bem-vindo, {user?.nome}.</p>
       <p>
