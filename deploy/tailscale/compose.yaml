@@ -1,8 +1,14 @@
 name: rest-system-tailscale
 # "Máquina" própria na rede Tailscale só para o Rest System: https://rest-system.<sua-tailnet>.ts.net
 # Não mexe no tailscaled da máquina nem no Funnel dos outros projetos (modo userspace, estado próprio).
-# Primeiro login: sem chave. Rode `docker compose up -d` e abra o link de login que aparece em
-# `docker logs rest-system-tailscale`. Depois disso o estado fica em ./estado.
+# Primeiro login (só uma vez; depois o estado fica em ./estado): NÃO use o link do
+# `docker logs` deste container, ele muda a cada minuto e o anterior deixa de valer. Em vez disso:
+#   docker run -d --name rest-system-ts-login --network host -v "$PWD/estado:/var/lib/tailscale" \
+#     --entrypoint sh tailscale/tailscale:latest -c 'tailscaled --tun=userspace-networking \
+#     --statedir=/var/lib/tailscale --socket=/tmp/t.sock & sleep 3; \
+#     tailscale --socket=/tmp/t.sock up --hostname=rest-system --timeout=0; sleep infinity'
+#   docker logs rest-system-ts-login        # link fixo: abra e aprove
+#   docker rm -f rest-system-ts-login && docker compose up -d
 services:
   tailscale:
     image: tailscale/tailscale:latest
