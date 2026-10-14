@@ -24,7 +24,27 @@ export interface Comanda {
   aberta_por: OrigemAbertura;
   aberta_em: string;
   fechada_em: string | null;
+  subtotal: string | null;
+  taxa_servico: string | null;
   total: string | null;
+}
+
+export interface ContaItem {
+  produto_id: string;
+  produto_nome: string;
+  preco_unitario: string;
+  quantidade: number;
+  valor: string;
+}
+
+export interface Conta {
+  comanda_id: string;
+  mesa_numero: number;
+  itens: ContaItem[];
+  subtotal: string;
+  taxa_servico: string;
+  total: string;
+  pedidos_pendentes: number;
 }
 
 export type PedidoStatus = "recebido" | "em_preparo" | "pronto" | "entregue" | "cancelado";

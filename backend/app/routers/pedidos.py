@@ -7,14 +7,13 @@ from app.auth.deps import require_role
 from app.db.session import get_db
 from app.models.pedido import PedidoStatus
 from app.models.roles import Role
+from app.schemas.auth import CurrentUser
 from app.schemas.pedido import PedidoCreate, PedidoOut, PedidoStatusUpdate
 from app.services import pedido_service
 
-router = APIRouter(
-    prefix="/pedidos",
-    tags=["pedidos"],
-    dependencies=[Depends(require_role(Role.admin, Role.salao, Role.cozinha))],
-)
+qualquer_funcionario = require_role(Role.admin, Role.salao, Role.cozinha)
+
+router = APIRouter(prefix="/pedidos", tags=["pedidos"], dependencies=[Depends(qualquer_funcionario)])
 
 
 @router.post("", response_model=PedidoOut, status_code=status.HTTP_201_CREATED)
@@ -33,6 +32,9 @@ async def listar(
 
 @router.patch("/{pedido_id}/status", response_model=PedidoOut)
 async def atualizar_status(
-    pedido_id: uuid.UUID, dados: PedidoStatusUpdate, db: AsyncSession = Depends(get_db)
+    pedido_id: uuid.UUID,
+    dados: PedidoStatusUpdate,
+    user: CurrentUser = Depends(qualquer_funcionario),
+    db: AsyncSession = Depends(get_db),
 ) -> PedidoOut:
-    return await pedido_service.atualizar_status(db, pedido_id, dados.status)
+    return await pedido_service.atualizar_status(db, pedido_id, dados.status, user.role)

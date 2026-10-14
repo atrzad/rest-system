@@ -12,6 +12,7 @@ from app.models.mesa import Mesa
 from app.models.pedido import Pedido, PedidoStatus
 from app.models.pedido_item import PedidoItem
 from app.models.produto import Produto
+from app.models.roles import Role
 from app.schemas.pedido import PedidoItemCreate, PedidoItemOut, PedidoOut
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,20 @@ TRANSICOES_VALIDAS: dict[PedidoStatus, set[PedidoStatus]] = {
     PedidoStatus.pronto: {PedidoStatus.entregue},
     PedidoStatus.entregue: set(),
     PedidoStatus.cancelado: set(),
+}
+
+# Quem pode fazer cada transição. Admin pode tudo que TRANSICOES_VALIDAS permite.
+TRANSICOES_POR_ROLE: dict[Role, set[tuple[PedidoStatus, PedidoStatus]]] = {
+    Role.cozinha: {
+        (PedidoStatus.recebido, PedidoStatus.em_preparo),
+        (PedidoStatus.em_preparo, PedidoStatus.pronto),
+        (PedidoStatus.recebido, PedidoStatus.cancelado),
+        (PedidoStatus.em_preparo, PedidoStatus.cancelado),
+    },
+    Role.salao: {
+        (PedidoStatus.pronto, PedidoStatus.entregue),
+        (PedidoStatus.recebido, PedidoStatus.cancelado),
+    },
 }
 
 EVENTO_POR_STATUS: dict[PedidoStatus, str] = {
@@ -123,17 +138,57 @@ async def listar(
     status_filtro: PedidoStatus | None = None,
     comanda_id: uuid.UUID | None = None,
 ) -> list[PedidoOut]:
-    query = select(Pedido).order_by(Pedido.criado_em)
+    query = (
+        select(Pedido, Mesa.numero)
+        .join(Comanda, Pedido.comanda_id == Comanda.id)
+        .join(Mesa, Comanda.mesa_id == Mesa.id)
+        .order_by(Pedido.criado_em)
+    )
     if status_filtro is not None:
         query = query.where(Pedido.status == status_filtro)
     if comanda_id is not None:
         query = query.where(Pedido.comanda_id == comanda_id)
 
-    pedidos = (await db.execute(query)).scalars().all()
-    return [await _to_out(db, pedido) for pedido in pedidos]
+    linhas = (await db.execute(query)).all()
+    if not linhas:
+        return []
+
+    # Uma query só para os itens de todos os pedidos (evita N+1).
+    itens_por_pedido: dict[uuid.UUID, list[PedidoItemOut]] = {pedido.id: [] for pedido, _ in linhas}
+    resultado_itens = await db.execute(
+        select(PedidoItem, Produto.nome)
+        .join(Produto, PedidoItem.produto_id == Produto.id)
+        .where(PedidoItem.pedido_id.in_(itens_por_pedido.keys()))
+    )
+    for item, nome in resultado_itens.all():
+        itens_por_pedido[item.pedido_id].append(
+            PedidoItemOut(
+                id=item.id,
+                produto_id=item.produto_id,
+                produto_nome=nome,
+                quantidade=item.quantidade,
+                preco_unitario=item.preco_unitario,
+                observacao=item.observacao,
+            )
+        )
+
+    return [
+        PedidoOut(
+            id=pedido.id,
+            comanda_id=pedido.comanda_id,
+            mesa_numero=mesa_numero,
+            status=pedido.status,
+            criado_em=pedido.criado_em,
+            atualizado_em=pedido.atualizado_em,
+            itens=itens_por_pedido[pedido.id],
+        )
+        for pedido, mesa_numero in linhas
+    ]
 
 
-async def atualizar_status(db: AsyncSession, pedido_id: uuid.UUID, novo_status: PedidoStatus) -> PedidoOut:
+async def atualizar_status(
+    db: AsyncSession, pedido_id: uuid.UUID, novo_status: PedidoStatus, role: Role
+) -> PedidoOut:
     pedido = await db.get(Pedido, pedido_id)
     if pedido is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Pedido não encontrado")
@@ -142,6 +197,11 @@ async def atualizar_status(db: AsyncSession, pedido_id: uuid.UUID, novo_status: 
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             f"Transição inválida de '{pedido.status.value}' para '{novo_status.value}'",
+        )
+    if role != Role.admin and (pedido.status, novo_status) not in TRANSICOES_POR_ROLE.get(role, set()):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            f"O perfil '{role.value}' não pode mudar um pedido de '{pedido.status.value}' para '{novo_status.value}'",
         )
 
     pedido.status = novo_status

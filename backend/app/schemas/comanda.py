@@ -12,6 +12,10 @@ class AbrirComandaRequest(BaseModel):
     origem: OrigemAbertura
 
 
+class FecharComandaRequest(BaseModel):
+    taxa_servico: bool = True
+
+
 class ComandaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -22,4 +26,24 @@ class ComandaOut(BaseModel):
     aberta_por: OrigemAbertura
     aberta_em: datetime
     fechada_em: datetime | None
+    subtotal: Decimal | None
+    taxa_servico: Decimal | None
     total: Decimal | None
+
+
+class ContaItemOut(BaseModel):
+    produto_id: uuid.UUID
+    produto_nome: str
+    preco_unitario: Decimal
+    quantidade: int
+    valor: Decimal
+
+
+class ContaOut(BaseModel):
+    comanda_id: uuid.UUID
+    mesa_numero: int
+    itens: list[ContaItemOut]
+    subtotal: Decimal
+    taxa_servico: Decimal
+    total: Decimal
+    pedidos_pendentes: int

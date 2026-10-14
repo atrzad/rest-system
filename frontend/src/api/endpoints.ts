@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 import type { Funcionario, Role } from "../types/auth";
-import type { Comanda, Mesa, OrigemAbertura, Pedido, PedidoStatus, Produto } from "../types/domain";
+import type { Comanda, Conta, Mesa, OrigemAbertura, Pedido, PedidoStatus, Produto } from "../types/domain";
 
 export interface HealthResponse {
   status: string;
@@ -84,8 +84,15 @@ export function abrirComandaPorMesa(numero_mesa: number, origem: OrigemAbertura)
   });
 }
 
-export function fecharComanda(id: string): Promise<Comanda> {
-  return apiFetch<Comanda>(`/comandas/${id}/fechar`, { method: "POST" });
+export function getConta(comandaId: string, taxaServico = true): Promise<Conta> {
+  return apiFetch<Conta>(`/comandas/${comandaId}/conta?taxa=${taxaServico}`);
+}
+
+export function fecharComanda(id: string, taxaServico: boolean): Promise<Comanda> {
+  return apiFetch<Comanda>(`/comandas/${id}/fechar`, {
+    method: "POST",
+    body: JSON.stringify({ taxa_servico: taxaServico }),
+  });
 }
 
 export interface CriarPedidoItemInput {

@@ -42,6 +42,7 @@ export default function KDS() {
   });
 
   async function avancarStatus(pedido: Pedido, novoStatus: PedidoStatus) {
+    if (novoStatus === "cancelado" && !confirm(`Cancelar o pedido da mesa ${pedido.mesa_numero}?`)) return;
     try {
       await atualizarStatusPedido(pedido.id, novoStatus);
       await carregar();
@@ -82,11 +83,16 @@ export default function KDS() {
                       </li>
                     ))}
                   </ul>
-                  {coluna.proximo && (
-                    <button onClick={() => avancarStatus(pedido, coluna.proximo as PedidoStatus)}>
-                      {coluna.proximo === "em_preparo" ? "Iniciar preparo" : "Marcar como pronto"}
-                    </button>
-                  )}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {coluna.proximo && (
+                      <button onClick={() => avancarStatus(pedido, coluna.proximo as PedidoStatus)}>
+                        {coluna.proximo === "em_preparo" ? "Iniciar preparo" : "Marcar como pronto"}
+                      </button>
+                    )}
+                    {coluna.status !== "pronto" && (
+                      <button onClick={() => avancarStatus(pedido, "cancelado")}>Cancelar</button>
+                    )}
+                  </div>
                 </div>
               ))}
           </div>
