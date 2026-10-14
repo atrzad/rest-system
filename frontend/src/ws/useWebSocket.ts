@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8000";
+// Em dev aponta para o uvicorn (VITE_WS_URL no .env.local); no build de produção fica vazio e
+// usa o mesmo endereço do site (wss:// atrás do HTTPS do Tailscale).
+const WS_URL =
+  import.meta.env.VITE_WS_URL || `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
 export function wsUrlParaStaff(): string | null {
   const token = localStorage.getItem("token");

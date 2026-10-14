@@ -1,0 +1,20 @@
+[Unit]
+Description=Rest System - comandas + KDS (API + site, porta 3700, só localhost; público via Tailscale Funnel)
+After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# Roda a cópia publicada por deploy/publicar.sh, nunca a pasta de desenvolvimento.
+WorkingDirectory=%h/.local/share/rest-system/atual/backend
+EnvironmentFile=%h/.config/rest-system/producao.env
+ExecStart=%h/.local/share/rest-system/atual/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3700
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+UMask=0077
+MemoryMax=512M
+
+[Install]
+WantedBy=default.target

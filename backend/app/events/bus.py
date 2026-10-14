@@ -3,7 +3,7 @@ import redis.asyncio as redis
 from app.config import settings
 from app.events.schemas import EventoEnvelope
 
-CANAL_EVENTOS = "eventos:all"
+CANAL_EVENTOS = settings.canal_eventos
 
 _redis: redis.Redis | None = None
 

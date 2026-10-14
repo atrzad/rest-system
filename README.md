@@ -81,6 +81,27 @@ O endereço dentro do QR vem de `PUBLIC_BASE_URL` no `.env`.
   preparo); salão marca entregue e cancela só pedido recebido; admin pode tudo.
 - O dashboard usa o fuso `TIMEZONE_LOCAL` (padrão `America/Manaus`) para "hoje", "por hora" e "por dia".
 
+## Produção (Tailscale Funnel)
+
+No ar em **https://rest-system.tail9ff58.ts.net**. Um processo só (uvicorn na porta 3700, só
+localhost) entrega a API, o WebSocket e o site. Um container Tailscale próprio
+(`deploy/tailscale/`) publica esse endereço na internet via Funnel; os clientes abrem pelo QR sem
+precisar de Tailscale.
+
+- **Publicar o último commit:** `deploy/publicar.sh`. Copia o HEAD para
+  `~/.local/share/rest-system/releases/`, monta o venv e o build, faz backup do banco
+  (`~/.local/share/rest-system/backups/`), migra, troca o link `atual`, reinicia e confere. Se o site
+  não responder, volta para a versão anterior. A pasta de desenvolvimento nunca é usada pelo
+  serviço, então dá para mexer nela à vontade.
+- **Configuração:** `~/.config/rest-system/producao.env` (chmod 600; modelo em
+  `deploy/producao.env.example`). Banco próprio `rest_system_prod` com usuário próprio, canal Redis
+  próprio, `/docs` desligado.
+- **Serviço:** `systemctl --user status rest-system` / `journalctl --user -u rest-system -f`
+  (unidade em `deploy/rest-system.service`, copiada para `~/.config/systemd/user/`).
+- **Tailscale:** `cd deploy/tailscale && docker compose up -d`; status com
+  `docker exec rest-system-tailscale tailscale funnel status`.
+- Login tem limite de 5 senhas erradas por e-mail a cada 15 minutos.
+
 ## Logs internos
 
 Eventos de negócio (login, abertura/fechamento de comanda, pedidos) e exceções não

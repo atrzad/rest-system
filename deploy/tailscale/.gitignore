@@ -1,0 +1,3 @@
+# Estado do nó (chaves do Tailscale) e chave de autenticação: nunca vão para o git.
+estado/
+.env

@@ -1,10 +1,16 @@
 """Cria um funcionário inicial (ex: o primeiro admin). Uso:
 
-    .venv/bin/python -m app.seed --nome "Admin" --email admin@rest-system.local --senha "..." --role admin
+    .venv/bin/python -m app.seed --nome "Admin" --email admin@seudominio.com --role admin
+
+Sem --senha, a senha é lida da entrada padrão (não fica no histórico do shell nem no `ps`):
+
+    printf '%s' "$SENHA" | .venv/bin/python -m app.seed --nome "Admin" --email admin@seudominio.com
 """
 
 import argparse
 import asyncio
+import getpass
+import sys
 
 from sqlalchemy import select
 
@@ -31,8 +37,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--nome", required=True)
     parser.add_argument("--email", required=True)
-    parser.add_argument("--senha", required=True)
+    parser.add_argument("--senha", help="evite: prefira mandar pela entrada padrão")
     parser.add_argument("--role", choices=[r.value for r in Role], default=Role.admin.value)
     args = parser.parse_args()
 
-    asyncio.run(seed(args.nome, args.email, args.senha, Role(args.role)))
+    senha = args.senha
+    if senha is None:
+        senha = getpass.getpass("Senha: ") if sys.stdin.isatty() else sys.stdin.readline().rstrip("\n")
+    if len(senha) < 8:
+        sys.exit("Senha muito curta (mínimo 8 caracteres).")
+
+    asyncio.run(seed(args.nome, args.email, senha, Role(args.role)))

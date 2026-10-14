@@ -13,6 +13,13 @@ class Settings(BaseSettings):
     public_base_url: str = "http://localhost:5173"
     # Fuso usado para "hoje", "por hora" e "por dia" no dashboard.
     timezone_local: str = "America/Manaus"
+    # Canal do Redis Pub/Sub. O pub/sub ignora o número do banco do Redis, então dev e produção
+    # na mesma instância precisam de canais diferentes para não trocarem eventos entre si.
+    canal_eventos: str = "eventos:all"
+    # /docs e /openapi.json (Swagger). Desligar em produção pública.
+    expor_docs: bool = True
+    # Pasta do build do frontend (frontend/dist). Se existir, a API também serve o site (mesma origem).
+    frontend_dist: str = ""
 
     @property
     def cors_origins_list(self) -> list[str]:

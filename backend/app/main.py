@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.logging_db import configurar_logging, escrever_logs
 from app.routers import auth, chamados, comandas, dashboard, funcionarios, mesas, pedidos, produtos, publico, ws
+from app.frontend import servir_frontend
 from app.ws.router_bridge import escutar_eventos
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             await task
 
 
-app = FastAPI(title="Rest System API", lifespan=lifespan)
+app = FastAPI(
+    title="Rest System API",
+    lifespan=lifespan,
+    docs_url="/docs" if settings.expor_docs else None,
+    redoc_url="/redoc" if settings.expor_docs else None,
+    openapi_url="/openapi.json" if settings.expor_docs else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,3 +69,7 @@ app.include_router(ws.router)
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Por último: em produção a API também entrega o site (as rotas acima têm prioridade).
+servir_frontend(app, settings.frontend_dist)

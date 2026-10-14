@@ -2,6 +2,7 @@ import os
 import uuid
 from collections.abc import AsyncIterator
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -31,6 +32,13 @@ async def _preparar_banco():
         await conn.run_sync(Base.metadata.create_all)
     yield
     await engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def _zerar_limite_de_login():
+    from app.routers import auth
+
+    auth._falhas.clear()
 
 
 @pytest_asyncio.fixture(autouse=True)
