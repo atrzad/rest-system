@@ -19,9 +19,11 @@ ROTEAMENTO_POR_TIPO: dict[str, list[Role]] = {
     "garcom_chamado": [Role.salao],
     "chamado_atendido": [Role.salao],
     "pedido_criado": [Role.cozinha],
-    "pedido_em_preparo": [Role.salao],
-    "pedido_pronto": [Role.salao],
-    "pedido_entregue": [Role.salao],
+    # A cozinha também recebe os avanços de status: com mais de uma tela no KDS, ou quando o
+    # salão marca "entregue", o pedido precisa mudar de coluna (ou sair do "Pronto") sozinho.
+    "pedido_em_preparo": [Role.salao, Role.cozinha],
+    "pedido_pronto": [Role.salao, Role.cozinha],
+    "pedido_entregue": [Role.salao, Role.cozinha],
     "pedido_cancelado": [Role.cozinha, Role.salao],
     "comanda_fechada": [Role.salao, Role.admin],
 }
