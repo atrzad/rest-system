@@ -5,7 +5,10 @@ import { Link } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { criarMesa, listMesas, regenerarTokenMesa } from "../../api/endpoints";
+import { Carregando } from "../../components/ui/Estados";
+import { useConfirmar } from "../../components/ui/useConfirmar";
 import type { Mesa } from "../../types/domain";
+import { useTitulo } from "../../utils/useTitulo";
 
 export default function Mesas() {
   const [mesas, setMesas] = useState<Mesa[]>([]);
@@ -16,6 +19,8 @@ export default function Mesas() {
   const [capacidade, setCapacidade] = useState("");
   const [criando, setCriando] = useState(false);
   const [qrAberto, setQrAberto] = useState<string | null>(null);
+  const [dialogoConfirmar, confirmar] = useConfirmar();
+  useTitulo("Mesas");
 
   async function carregar() {
     setCarregando(true);
@@ -50,9 +55,12 @@ export default function Mesas() {
   }
 
   async function handleRegenerar(mesa: Mesa) {
-    const ok = confirm(
-      `Gerar um código novo para a mesa ${mesa.numero}? O QR impresso atual para de funcionar e precisa ser reimpresso.`,
-    );
+    const ok = await confirmar({
+      titulo: `Gerar código novo para a mesa ${mesa.numero}?`,
+      mensagem: "O QR impresso atual para de funcionar e precisa ser reimpresso.",
+      confirmar: "Gerar código novo",
+      destrutivo: true,
+    });
     if (!ok) return;
     try {
       await regenerarTokenMesa(mesa.id);
@@ -64,15 +72,13 @@ export default function Mesas() {
 
   return (
     <main className="pagina">
-      <p>
-        <Link to="/admin">← voltar</Link>
-      </p>
+      {dialogoConfirmar}
       <h1>Mesas</h1>
       <p>
         <Link to="/admin/mesas/imprimir">Imprimir QR codes de todas as mesas</Link>
       </p>
 
-      <form onSubmit={handleCriar} style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+      <form onSubmit={handleCriar} style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
         <input
           placeholder="Número"
           type="number"
@@ -96,7 +102,7 @@ export default function Mesas() {
       {erro && <p className="erro">{erro}</p>}
 
       {carregando ? (
-        <p>Carregando...</p>
+        <Carregando />
       ) : (
         <ul style={{ textAlign: "left" }}>
           {mesas.map((m) => (
@@ -115,7 +121,7 @@ export default function Mesas() {
                   <QRCodeSVG value={m.url_qr} size={180} marginSize={2} />
                   <br />
                   <a href={m.url_qr} target="_blank" rel="noreferrer">
-                    <small>{m.url_qr}</small>
+                    <small style={{ overflowWrap: "anywhere" }}>{m.url_qr}</small>
                   </a>
                 </div>
               )}

@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { abrirComandaPorMesa, fecharComanda, getConta, listComandas, listMesas, listPedidos } from "../../api/endpoints";
-import ChamadosBanner from "../../components/ChamadosBanner";
 import Conexao from "../../components/Conexao";
+import Dialogo from "../../components/ui/Dialogo";
+import { Carregando, ErroAoCarregar, Vazio } from "../../components/ui/Estados";
 import type { Comanda, Conta, Mesa } from "../../types/domain";
 import { formatarReais } from "../../utils/formatar";
 import { tocarAlerta } from "../../utils/som";
+import { useTitulo } from "../../utils/useTitulo";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
 
 export default function Mesas() {
@@ -23,6 +25,7 @@ export default function Mesas() {
   const [conta, setConta] = useState<Conta | null>(null);
   const [comTaxa, setComTaxa] = useState(true);
   const [erroFechamento, setErroFechamento] = useState<string | null>(null);
+  useTitulo("Mesas");
 
   const carregar = useCallback(async () => {
     try {
@@ -119,17 +122,17 @@ export default function Mesas() {
 
   return (
     <main className="pagina">
-      <ChamadosBanner />
-      <div className="linha-entre" style={{ marginTop: 8 }}>
-        <Link to="/salao">← voltar</Link>
+      <div className="linha-entre">
+        <h1>Mesas</h1>
         <Conexao conectado={conectado} />
       </div>
-      <h1>Mesas</h1>
 
-      {erro && <p className="erro">{erro}</p>}
+      {erro && <ErroAoCarregar mensagem={erro} aoTentarDeNovo={carregar} />}
 
       {carregando ? (
-        <p>Carregando...</p>
+        <Carregando />
+      ) : mesas.length === 0 ? (
+        <Vazio titulo="Nenhuma mesa ativa">O administrador cadastra as mesas na tela Mesas do painel.</Vazio>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
           {mesas.map((mesa) => {
@@ -167,66 +170,70 @@ export default function Mesas() {
         </div>
       )}
 
-      {fechando && (
-        <div className="modal-fundo">
-          <div className="modal" role="dialog" aria-modal="true" aria-label={`Fechar conta da mesa ${fechando.mesa_numero}`}>
-            <h2 style={{ marginTop: 0 }}>Fechar conta — Mesa {fechando.mesa_numero}</h2>
-            {!conta && !erroFechamento && <p>Calculando...</p>}
-            {conta && (
-              <>
-                {conta.itens.length === 0 ? (
-                  <p>Nenhum item consumido.</p>
-                ) : (
-                  <table style={{ width: "100%" }}>
-                    <tbody>
-                      {conta.itens.map((item) => (
-                        <tr key={`${item.produto_id}-${item.preco_unitario}`}>
-                          <td>
-                            {item.quantidade}x {item.produto_nome}
-                          </td>
-                          <td style={{ textAlign: "right" }}>{formatarReais(item.valor)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-                <hr />
-                <p className="linha-entre" style={{ margin: "4px 0" }}>
-                  <span>Subtotal</span>
-                  <span>{formatarReais(conta.subtotal)}</span>
-                </p>
-                <label className="linha-entre" style={{ margin: "4px 0" }}>
-                  <span>
-                    <input type="checkbox" checked={comTaxa} onChange={(e) => setComTaxa(e.target.checked)} /> Taxa
-                    de serviço (10%)
-                  </span>
-                  <span>{formatarReais(conta.taxa_servico)}</span>
-                </label>
-                <p className="linha-entre" style={{ fontSize: 20, margin: "8px 0" }}>
-                  <strong>Total</strong>
-                  <strong>{formatarReais(conta.total)}</strong>
-                </p>
-                {conta.pedidos_pendentes > 0 && (
-                  <p className="aviso">
-                    Há {conta.pedidos_pendentes} pedido(s) ainda não entregue(s). Entregue ou cancele antes de fechar.
-                  </p>
-                )}
-              </>
+      <Dialogo
+        aberto={fechando !== null}
+        titulo={`Fechar conta — Mesa ${fechando?.mesa_numero ?? ""}`}
+        aoFechar={handleCancelarFechamento}
+        acoes={
+          <>
+            <button type="button" onClick={handleCancelarFechamento}>
+              Voltar
+            </button>
+            <button
+              type="button"
+              className="primario"
+              onClick={handleConfirmarFechamento}
+              disabled={!conta || conta.pedidos_pendentes > 0 || acaoEmAndamento === fechando?.id}
+            >
+              {acaoEmAndamento === fechando?.id ? "Fechando..." : "Confirmar fechamento"}
+            </button>
+          </>
+        }
+      >
+        {!conta && !erroFechamento && <Carregando texto="Calculando a conta..." />}
+        {conta && (
+          <>
+            {conta.itens.length === 0 ? (
+              <p>Nenhum item consumido.</p>
+            ) : (
+              <table style={{ width: "100%" }}>
+                <tbody>
+                  {conta.itens.map((item) => (
+                    <tr key={`${item.produto_id}-${item.preco_unitario}`}>
+                      <td>
+                        {item.quantidade}x {item.produto_nome}
+                      </td>
+                      <td style={{ textAlign: "right" }}>{formatarReais(item.valor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
-            {erroFechamento && <p className="erro">{erroFechamento}</p>}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
-              <button onClick={handleCancelarFechamento}>Voltar</button>
-              <button
-                className="primario"
-                onClick={handleConfirmarFechamento}
-                disabled={!conta || conta.pedidos_pendentes > 0 || acaoEmAndamento === fechando.id}
-              >
-                Confirmar fechamento
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            <hr />
+            <p className="linha-entre" style={{ margin: "4px 0" }}>
+              <span>Subtotal</span>
+              <span>{formatarReais(conta.subtotal)}</span>
+            </p>
+            <label className="linha-entre" style={{ margin: "4px 0", minHeight: "var(--controle)" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <input type="checkbox" checked={comTaxa} onChange={(e) => setComTaxa(e.target.checked)} /> Taxa de
+                serviço (10%)
+              </span>
+              <span>{formatarReais(conta.taxa_servico)}</span>
+            </label>
+            <p className="linha-entre" style={{ fontSize: 20, margin: "8px 0" }}>
+              <strong>Total</strong>
+              <strong>{formatarReais(conta.total)}</strong>
+            </p>
+            {conta.pedidos_pendentes > 0 && (
+              <p className="alerta-caixa atencao">
+                Há {conta.pedidos_pendentes} pedido(s) ainda não entregue(s). Entregue ou cancele antes de fechar.
+              </p>
+            )}
+          </>
+        )}
+        {erroFechamento && <p className="erro">{erroFechamento}</p>}
+      </Dialogo>
     </main>
   );
 }

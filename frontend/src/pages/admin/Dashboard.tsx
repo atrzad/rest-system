@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { ApiError } from "../../api/client";
 import { getDashboardVendas } from "../../api/endpoints";
 import type { DashboardVendas } from "../../types/domain";
 import { formatarReais } from "../../utils/formatar";
+import { useTitulo } from "../../utils/useTitulo";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
 
 const PERIODOS = [
@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [erro, setErro] = useState<string | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
   const cores = useTemaEscuro() ? TEMA.escuro : TEMA.claro;
+  useTitulo("Vendas");
 
   const carregar = useCallback(async () => {
     try {
@@ -71,9 +72,6 @@ export default function Dashboard() {
 
   return (
     <main className="pagina-larga">
-      <p>
-        <Link to="/admin">← voltar</Link>
-      </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ margin: 0 }}>Vendas</h1>
         <div role="group" aria-label="Período" style={{ display: "flex", gap: 4 }}>

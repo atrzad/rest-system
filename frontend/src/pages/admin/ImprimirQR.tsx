@@ -5,11 +5,13 @@ import { Link } from "react-router-dom";
 import { ApiError } from "../../api/client";
 import { listMesas } from "../../api/endpoints";
 import type { Mesa } from "../../types/domain";
+import { useTitulo } from "../../utils/useTitulo";
 
 /** Folha com o QR de cada mesa ativa + número + código para digitar, pronta para imprimir. */
 export default function ImprimirQR() {
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [erro, setErro] = useState<string | null>(null);
+  useTitulo("Imprimir QR das mesas");
 
   useEffect(() => {
     listMesas()

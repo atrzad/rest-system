@@ -2,11 +2,14 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useTitulo } from "../../utils/useTitulo";
+
 /** Fallback quando a câmera não lê o QR: o cliente digita o número da mesa e o código impresso. */
 export default function EntrarMesa() {
   const navigate = useNavigate();
   const [numero, setNumero] = useState("");
   const [codigo, setCodigo] = useState("");
+  useTitulo("Entrar na mesa");
 
   function handleEntrar(event: FormEvent) {
     event.preventDefault();

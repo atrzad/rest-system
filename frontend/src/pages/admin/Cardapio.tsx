@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { atualizarProduto, criarProduto, listProdutos } from "../../api/endpoints";
+import { Carregando } from "../../components/ui/Estados";
 import type { Produto } from "../../types/domain";
+import { formatarReais } from "../../utils/formatar";
+import { useTitulo } from "../../utils/useTitulo";
 
 export default function Cardapio() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -15,6 +17,7 @@ export default function Cardapio() {
   const [categoria, setCategoria] = useState("");
   const [preco, setPreco] = useState("");
   const [criando, setCriando] = useState(false);
+  useTitulo("Cardápio");
 
   async function carregar() {
     setCarregando(true);
@@ -60,9 +63,6 @@ export default function Cardapio() {
 
   return (
     <main className="pagina-larga">
-      <p>
-        <Link to="/admin">← voltar</Link>
-      </p>
       <h1>Cardápio</h1>
 
       <form onSubmit={handleCriar} style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
@@ -85,7 +85,7 @@ export default function Cardapio() {
       {erro && <p className="erro">{erro}</p>}
 
       {carregando ? (
-        <p>Carregando...</p>
+        <Carregando />
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -101,7 +101,7 @@ export default function Cardapio() {
               <tr key={p.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td>{p.nome}</td>
                 <td>{p.categoria}</td>
-                <td>R$ {p.preco}</td>
+                <td>{formatarReais(p.preco)}</td>
                 <td>
                   <input type="checkbox" checked={p.disponivel} onChange={() => handleToggleDisponivel(p)} />
                 </td>

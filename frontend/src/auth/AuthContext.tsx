@@ -1,12 +1,15 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { login as loginRequest } from "../api/endpoints";
 import type { AuthUser } from "../types/auth";
+import { EVENTO_SESSAO_EXPIRADA, expiracaoDoToken } from "./sessao";
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
+  /** Mensagem para a tela de login (ex.: "Sua sessão expirou"). */
+  aviso: string | null;
   login: (email: string, senha: string) => Promise<void>;
   logout: () => void;
 }
@@ -14,40 +17,78 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const STORAGE_KEY = "rest-system:auth";
+const AVISO_EXPIRADA = "Sua sessão expirou. Entre de novo para continuar.";
 
-function loadStoredUser(): AuthUser | null {
+function limparSessao() {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("token");
+}
+
+function tokenVencido(token: string): boolean {
+  const expira = expiracaoDoToken(token);
+  return expira !== null && expira <= Date.now();
+}
+
+/** Usuário salvo no aparelho, ou null se não houver ou se o token já tiver vencido. */
+function carregarSessao(): { user: AuthUser | null; aviso: string | null } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
+    const user = raw ? (JSON.parse(raw) as AuthUser) : null;
+    if (user && tokenVencido(user.token)) {
+      limparSessao();
+      return { user: null, aviso: AVISO_EXPIRADA };
+    }
+    return { user, aviso: null };
   } catch {
-    return null;
+    return { user: null, aviso: null };
   }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [inicial] = useState(carregarSessao);
+  const [user, setUser] = useState<AuthUser | null>(inicial.user);
+  const [aviso, setAviso] = useState<string | null>(inicial.aviso);
 
-  useEffect(() => {
-    setUser(loadStoredUser());
-    setLoading(false);
+  const expirar = useCallback(() => {
+    limparSessao();
+    setUser(null);
+    setAviso(AVISO_EXPIRADA);
   }, []);
+
+  // A API respondeu 401 em alguma tela.
+  useEffect(() => {
+    window.addEventListener(EVENTO_SESSAO_EXPIRADA, expirar);
+    return () => window.removeEventListener(EVENTO_SESSAO_EXPIRADA, expirar);
+  }, [expirar]);
+
+  // Tela parada (ex.: KDS ligado a noite toda): sai sozinho na hora em que o token vence.
+  useEffect(() => {
+    if (!user) return;
+    const expira = expiracaoDoToken(user.token);
+    if (expira === null) return;
+    const espera = Math.min(Math.max(expira - Date.now(), 0), 2 ** 31 - 1);
+    const id = setTimeout(expirar, espera);
+    return () => clearTimeout(id);
+  }, [user, expirar]);
 
   async function login(email: string, senha: string) {
     const resposta = await loginRequest(email, senha);
     const authUser: AuthUser = { nome: resposta.nome, role: resposta.role, token: resposta.access_token };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
     localStorage.setItem("token", authUser.token);
+    setAviso(null);
     setUser(authUser);
   }
 
   function logout() {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("token");
+    limparSessao();
+    setAviso(null);
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading: false, aviso, login, logout }}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

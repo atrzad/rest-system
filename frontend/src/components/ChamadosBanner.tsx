@@ -7,7 +7,7 @@ import { tocarAlerta } from "../utils/som";
 import { tempoDesde } from "../utils/tempo";
 import { useWebSocket, wsUrlParaStaff } from "../ws/useWebSocket";
 
-/** Faixa fixa no topo das telas do salão com as mesas que chamaram o garçom. */
+/** Faixa presa no topo das telas do salão (embaixo do cabeçalho) com as mesas que chamaram o garçom. */
 export default function ChamadosBanner() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [erro, setErro] = useState<string | null>(null);
@@ -50,29 +50,10 @@ export default function ChamadosBanner() {
   if (chamados.length === 0 && !erro) return null;
 
   return (
-    <div
-      role="alert"
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        background: "var(--chamado-fundo)",
-        color: "var(--chamado-texto)",
-        padding: "8px 12px",
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 8,
-        alignItems: "center",
-        borderRadius: 8,
-        marginTop: 8,
-      }}
-    >
+    <div className="chamados" role="alert">
       {erro && <span className="erro">{erro}</span>}
       {chamados.map((chamado) => (
-        <span
-          key={chamado.id}
-          style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-        >
+        <span key={chamado.id} className="chamado">
           <strong>Mesa {chamado.mesa_numero} chamou</strong>
           <span>{tempoDesde(chamado.criado_em)}</span>
           <button className="primario" onClick={() => handleAtender(chamado)}>

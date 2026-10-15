@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { atualizarFuncionario, criarFuncionario, listFuncionarios } from "../../api/endpoints";
+import { Carregando } from "../../components/ui/Estados";
 import type { Funcionario, Role } from "../../types/auth";
+import { useTitulo } from "../../utils/useTitulo";
 
 const ROLES: Role[] = ["admin", "salao", "cozinha"];
 
@@ -18,6 +19,7 @@ export default function Funcionarios() {
   const [senha, setSenha] = useState("");
   const [role, setRole] = useState<Role>("salao");
   const [criando, setCriando] = useState(false);
+  useTitulo("Funcionários");
 
   async function carregar() {
     setCarregando(true);
@@ -73,9 +75,6 @@ export default function Funcionarios() {
 
   return (
     <main className="pagina-larga">
-      <p>
-        <Link to="/admin">← voltar</Link>
-      </p>
       <h1>Funcionários</h1>
 
       <form onSubmit={handleCriar} style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
@@ -109,7 +108,7 @@ export default function Funcionarios() {
       {erro && <p className="erro">{erro}</p>}
 
       {carregando ? (
-        <p>Carregando...</p>
+        <Carregando />
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>

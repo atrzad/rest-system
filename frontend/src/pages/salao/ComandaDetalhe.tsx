@@ -3,10 +3,11 @@ import { Link, useParams } from "react-router-dom";
 
 import { ApiError } from "../../api/client";
 import { atualizarStatusPedido, criarPedido, getConta, listPedidos, listProdutos } from "../../api/endpoints";
-import ChamadosBanner from "../../components/ChamadosBanner";
 import Conexao from "../../components/Conexao";
+import { useConfirmar } from "../../components/ui/useConfirmar";
 import type { Conta, Pedido, PedidoStatus, Produto } from "../../types/domain";
 import { NOME_STATUS_PEDIDO, formatarReais } from "../../utils/formatar";
+import { useTitulo } from "../../utils/useTitulo";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
 
 interface ItemCarrinho {
@@ -27,6 +28,8 @@ export default function ComandaDetalhe() {
   const [observacao, setObservacao] = useState("");
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [enviando, setEnviando] = useState(false);
+  const [dialogoConfirmar, confirmar] = useConfirmar();
+  useTitulo(conta ? `Mesa ${conta.mesa_numero}` : "Comanda");
 
   const carregar = useCallback(async () => {
     if (!comandaId) return;
@@ -104,7 +107,16 @@ export default function ComandaDetalhe() {
   }
 
   async function handleMudarStatus(pedido: Pedido, novoStatus: PedidoStatus) {
-    if (novoStatus === "cancelado" && !confirm(`Cancelar o pedido da mesa ${pedido.mesa_numero}?`)) return;
+    if (
+      novoStatus === "cancelado" &&
+      !(await confirmar({
+        titulo: `Cancelar pedido da mesa ${pedido.mesa_numero}?`,
+        mensagem: "O pedido sai da cozinha e não entra na conta.",
+        confirmar: "Cancelar pedido",
+        destrutivo: true,
+      }))
+    )
+      return;
     try {
       await atualizarStatusPedido(pedido.id, novoStatus);
       await carregar();
@@ -117,8 +129,8 @@ export default function ComandaDetalhe() {
 
   return (
     <main className="pagina">
-      <ChamadosBanner />
-      <div className="linha-entre" style={{ marginTop: 8 }}>
+      {dialogoConfirmar}
+      <div className="linha-entre">
         <Link to="/salao/mesas">← voltar</Link>
         <Conexao conectado={conectado} />
       </div>

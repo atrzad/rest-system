@@ -5,6 +5,7 @@ import { ApiError } from "../../api/client";
 import { abrirComandaPublica, chamarGarcom, getContaPublica, getMesaPublica } from "../../api/endpoints";
 import type { Conta, MesaPublica, ProdutoPublico } from "../../types/domain";
 import { NOME_STATUS_PEDIDO, formatarReais } from "../../utils/formatar";
+import { useTitulo } from "../../utils/useTitulo";
 import { useWebSocket, wsUrlParaMesa } from "../../ws/useWebSocket";
 
 const COR_STATUS: Record<string, string> = {
@@ -28,6 +29,7 @@ export default function SelfView() {
   const [erro, setErro] = useState<string | null>(null);
   const [naoEncontrada, setNaoEncontrada] = useState(false);
   const [chamando, setChamando] = useState(false);
+  useTitulo(Number.isInteger(numero) ? `Mesa ${numero}` : "Mesa");
 
   const carregar = useCallback(async () => {
     try {

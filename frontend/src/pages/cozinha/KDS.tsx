@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ApiError } from "../../api/client";
 import { atualizarStatusPedido, listPedidos } from "../../api/endpoints";
-import { useAuth } from "../../auth/AuthContext";
 import Conexao from "../../components/Conexao";
+import { useConfirmar } from "../../components/ui/useConfirmar";
 import type { Pedido, PedidoStatus } from "../../types/domain";
 import { tocarAlerta } from "../../utils/som";
 import { tempoDesde } from "../../utils/tempo";
+import { useTitulo } from "../../utils/useTitulo";
 import { useWebSocket, wsUrlParaStaff } from "../../ws/useWebSocket";
 
 const COLUNAS: { status: PedidoStatus; titulo: string; proximo: PedidoStatus | null }[] = [
@@ -27,7 +28,8 @@ function corDoAtraso(pedido: Pedido, agora: number): string {
 }
 
 export default function KDS() {
-  const { user, logout } = useAuth();
+  const [dialogoConfirmar, confirmar] = useConfirmar();
+  useTitulo("KDS");
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
@@ -63,7 +65,16 @@ export default function KDS() {
   );
 
   async function avancarStatus(pedido: Pedido, novoStatus: PedidoStatus) {
-    if (novoStatus === "cancelado" && !confirm(`Cancelar o pedido da mesa ${pedido.mesa_numero}?`)) return;
+    if (
+      novoStatus === "cancelado" &&
+      !(await confirmar({
+        titulo: `Cancelar pedido da mesa ${pedido.mesa_numero}?`,
+        mensagem: "O pedido sai do KDS e o salão é avisado.",
+        confirmar: "Cancelar pedido",
+        destrutivo: true,
+      }))
+    )
+      return;
     try {
       await atualizarStatusPedido(pedido.id, novoStatus);
       await carregar();
@@ -74,13 +85,10 @@ export default function KDS() {
 
   return (
     <main className="pagina-larga" style={{ fontSize: 18 }}>
+      {dialogoConfirmar}
       <div className="linha-entre">
-        <h1 style={{ margin: 0 }}>KDS — Cozinha</h1>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Conexao conectado={conectado} />
-          <span>{user?.nome}</span>
-          <button onClick={logout}>Sair</button>
-        </div>
+        <h1 style={{ margin: 0 }}>Pedidos da cozinha</h1>
+        <Conexao conectado={conectado} />
       </div>
 
       {erro && <p className="erro">{erro}</p>}
