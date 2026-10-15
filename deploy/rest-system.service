@@ -9,6 +9,9 @@ Type=simple
 # Roda a cópia publicada por deploy/publicar.sh, nunca a pasta de desenvolvimento.
 WorkingDirectory=%h/.local/share/rest-system/atual/backend
 EnvironmentFile=%h/.config/rest-system/producao.env
+# No boot o serviço sobe antes do Docker: espera o Postgres (5432) e o Redis (6379) aceitarem conexão.
+ExecStartPre=/usr/bin/bash -c 'for i in $$(seq 1 120); do (exec 3<>/dev/tcp/127.0.0.1/5432 && exec 4<>/dev/tcp/127.0.0.1/6379) 2>/dev/null && exit 0; sleep 1; done; echo "Postgres/Redis não responderam em 120 s" >&2; exit 1'
+TimeoutStartSec=150
 ExecStart=%h/.local/share/rest-system/atual/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3700
 Restart=always
 RestartSec=3

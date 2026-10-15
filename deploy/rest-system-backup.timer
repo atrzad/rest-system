@@ -1,0 +1,11 @@
+[Unit]
+Description=Rest System - backup do banco todo dia às 04:30
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+# PC desligado às 04:30? Roda assim que ligar.
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

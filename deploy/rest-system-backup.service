@@ -1,0 +1,12 @@
+[Unit]
+Description=Rest System - backup diário do banco de produção
+# Disparado pelo rest-system-backup.timer. Para rodar agora: systemctl --user start rest-system-backup
+
+[Service]
+Type=oneshot
+# Script da versão publicada (deploy/publicar.sh), nunca da pasta de desenvolvimento.
+ExecStart=%h/.local/share/rest-system/atual/deploy/backup.sh
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+UMask=0077
